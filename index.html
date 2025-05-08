@@ -148,8 +148,12 @@
     let dragOffset = { x: 0, y: 0 };
 
     function pushHistory(){
-      history.push(JSON.parse(JSON.stringify(images)));
-      if(history.length>50) history.shift();
+      // clone the array, and for each item make a shallow copy that
+      // keeps the same .image, .svgText, etc.
+      history.push(
+      images.map(item => ({ ...item }))
+      );
+      if (history.length > 50) history.shift();
     }
     
     undoBtn.addEventListener('click', () => {
