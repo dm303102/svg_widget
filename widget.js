@@ -79,6 +79,13 @@ function svgTextToPngDataUrl(svgText, w, h, callback) {
   img.src = url;
 }
 
+const DPI = 96;    // or 300 for print‑resolution previews
+// assume widthInput/heightInput.value hold inches, e.g. “3.5” for 3½″
+const wIn  = parseFloat(widthInput.value);
+const hIn  = parseFloat(heightInput.value);
+const wPx  = Math.round(wIn * DPI);
+const hPx  = Math.round(hIn * DPI);
+
   // parse ?width=500&height=300 from the URL
   const params = new URLSearchParams(window.location.search);
   const forcedW = parseInt(params.get('width'));
