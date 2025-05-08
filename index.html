@@ -126,22 +126,26 @@
       { length: 36, width: 12, price: 50.00 }
     ];
     
-    const lengthSelect = document.getElementById('lengthSelect');
-    const widthSelect  = document.getElementById('widthSelect');
-    const priceDisplay = document.getElementById('priceDisplay');
+    const lengthSelect     = document.getElementById('lengthSelect');
+    const widthSelect      = document.getElementById('widthSelect');
+    const priceDisplay     = document.getElementById('priceDisplay');
     const fileInputContainer = document.getElementById('fileInputContainer');
-    const renderBtn    = document.getElementById('renderBtn');
-    const undoBtn      = document.getElementById('undoBtn');
-    const exportBtn    = document.getElementById('exportBtn');
-    const svgList      = document.getElementById('svgList');
-    const fileInput    = document.getElementById('fileInput');
-    const canvas       = document.getElementById('mainCanvas');
-    const ctx          = canvas.getContext('2d');
-    const DPI = 96, borderPx = 4;
-    dragOffset = {}; 
+    const renderBtn        = document.getElementById('renderBtn');
+    const undoBtn          = document.getElementById('undoBtn');
+    const exportBtn        = document.getElementById('exportBtn');
+    const svgList          = document.getElementById('svgList');
+    const fileInput        = document.getElementById('fileInput');
+    const canvas           = document.getElementById('mainCanvas');
+    const ctx              = canvas.getContext('2d');
+    const DPI   = 96, borderPx = 4;
     
-    let images = [], selectedId = null, history = [];
-    let dragging = false, cropping = false, cropStart = {}, dragOffset = { x: 0, y: 0 };
+    let images     = [];
+    let selectedId = null;
+    let history    = [];
+    let dragging   = false;
+    let cropping   = false;
+    let cropStart  = {};
+    let dragOffset = { x: 0, y: 0 };
 
     function pushHistory(){
       history.push(JSON.parse(JSON.stringify(images)));
@@ -157,97 +161,85 @@
     });
 
     // --- selectors ---
-    function initLength() {
-      const valid = variants.filter(v=>v.price!=null);
-      const lengths = Array.from(new Set(valid.map(v=>v.length))).sort((a,b)=>a-b);
-      lengthSelect.innerHTML = '<option value="">–</option>';
-      lengths.forEach(l=>{
-        const opt = document.createElement('option');
-        opt.value = l; opt.textContent = `${l}"`;
-        lengthSelect.append(opt);
+  // Populate the length dropdown
+  function initLength() {
+    const lengths = Array.from(new Set(variants.map(v=>v.length))).sort((a,b)=>a-b);
+    lengthSelect.innerHTML = '<option value="">–</option>';
+    lengths.forEach(l => {
+      const o = document.createElement('option');
+      o.value = l;
+      o.textContent = `${l}"`;
+      lengthSelect.appendChild(o);
+    });
+    lengthSelect.disabled = false;
+  }
+    
+ // When length changes, rebuild the width dropdown
+  function onLengthChange() {
+    const L = +lengthSelect.value;
+    widthSelect.innerHTML = '<option value="">–</option>';
+    widthSelect.disabled = !L;
+    if (L) {
+      const widths = variants
+        .filter(v => v.length === L)
+        .map(v => v.width)
+        .sort((a,b)=>a-b);
+      widths.forEach(w => {
+        const o = document.createElement('option');
+        o.value = w;
+        o.textContent = `${w}"`;
+        widthSelect.appendChild(o);
       });
-      lengthSelect.disabled = false;
     }
-    function onLengthChange() {
-      const L = +lengthSelect.value;
-      widthSelect.innerHTML = '<option value="">–</option>';
-      widthSelect.disabled = !L;
-      if (L) {
-        const widths = variants.filter(v=>v.length===L && v.price!=null)
-                               .map(v=>v.width)
-                               .sort((a,b)=>a-b);
-        widths.forEach(w=>{
-          const opt = document.createElement('option');
-          opt.value = w; opt.textContent = `${w}"`;
-          widthSelect.append(opt);
-        });
-      }
-      priceDisplay.textContent = '';
-      fileInputContainer.style.display = 'none';
-        redrawCanvas();
-    }
-    function onWidthChange() {
-      const L = +lengthSelect.value, W = +widthSelect.value;
-      const v = variants.find(v=>v.length===L && v.width===W && v.price!=null);
-      priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
-      fileInputContainer.style.display = v ? 'block' : 'none';
-        redrawCanvas();
-    }
-       
+    priceDisplay.textContent = '';
+    fileInputContainer.style.display = 'none';
+    redrawCanvas();
+  }
+
+  // When width changes, show price & file input
+  function onWidthChange() {
+    const L = +lengthSelect.value, W = +widthSelect.value;
+    const v = variants.find(x=>x.length===L&&x.width===W);
+    priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
+    fileInputContainer.style.display = v ? 'block' : 'none';
+    redrawCanvas();
+  }
+    
     // --- redraw ---
-    function redrawCanvas() {
-      const L = +lengthSelect.value, W = +widthSelect.value;
-      if (!(L && W)) { fileInputContainer.style.display='none'; return; }
-      const wPx = L*DPI, hPx = W*DPI;
-      canvas.width = wPx + 2*borderPx;
-      canvas.height= hPx + 2*borderPx;
+ // Draw the border + images
+  function redrawCanvas() {
+    const L = +lengthSelect.value, W = +widthSelect.value;
+    if (!(L && W)) return;
+    const wPx = L*DPI, hPx = W*DPI;
+    canvas.width  = wPx + 2*borderPx;
+    canvas.height = hPx + 2*borderPx;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.lineWidth = borderPx; ctx.strokeStyle = '#000';
+    ctx.strokeRect(borderPx/2, borderPx/2, wPx+borderPx, hPx+borderPx);
+    ctx.fillStyle = '#000'; ctx.font = '16px sans-serif';
+    ctx.textAlign='left';  ctx.fillText(`L: ${L}"`, borderPx+4, canvas.height-4);
+    ctx.textAlign='right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
 
-      // background
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-      ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.lineWidth=borderPx; ctx.strokeStyle='#000';
-      ctx.strokeRect(borderPx/2,borderPx/2,wPx+borderPx,hPx+borderPx);
-
-      // labels
-      ctx.fillStyle='#000'; ctx.font='16px sans-serif';
-      ctx.textAlign='left';  ctx.fillText(`L: ${L}"`, borderPx+4, canvas.height-4);
-      ctx.textAlign='right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
-
-      // draw images
-      images.forEach(it=>{
-        const dW = it.origW * it.fitScale * it.scalePercent;
-        const dH = it.origH * it.fitScale * it.scalePercent;
-        const cx = it.x + dW/2, cy = it.y + dH/2;
+    images.forEach(it => {
+      const dW = it.origW * it.fitScale * it.scalePercent;
+      const dH = it.origH * it.fitScale * it.scalePercent;
+      const cx = it.x + dW/2, cy = it.y + dH/2;
+      ctx.save();
+        ctx.translate(cx,cy);
+        ctx.rotate(it.rotation || 0);
+        ctx.drawImage(it.image, -dW/2, -dH/2, dW, dH);
+      ctx.restore();
+      if (it.id === selectedId) {
         ctx.save();
           ctx.translate(cx,cy);
-          ctx.rotate(it.rotation||0);
-          if (it.crop) {
-            ctx.beginPath();
-            ctx.rect(-dW/2+it.crop.x, -dH/2+it.crop.y, it.crop.w, it.crop.h);
-            ctx.clip();
-          }
-          ctx.drawImage(it.image, -dW/2, -dH/2, dW, dH);
-        ctx.restore();
-        if (it.id === selectedId) {
-          ctx.save();
-            ctx.translate(cx,cy);
-            ctx.rotate(it.rotation||0);
-            ctx.strokeStyle='red'; ctx.lineWidth=2;
-            ctx.strokeRect(-dW/2,-dH/2,dW,dH);
-          ctx.restore();
-        }
-      });
-
-      // active crop box
-      if (cropping && cropStart.startX!=null) {
-        const x0 = cropStart.startX, y0 = cropStart.startY;
-        const w0 = cropStart.curX - x0, h0 = cropStart.curY - y0;
-        ctx.save();
-          ctx.strokeStyle='blue'; ctx.lineWidth=2; ctx.setLineDash([6,4]);
-          ctx.strokeRect(x0,y0,w0,h0);
+          ctx.rotate(it.rotation || 0);
+          ctx.strokeStyle = 'red'; ctx.lineWidth = 2;
+          ctx.strokeRect(-dW/2,-dH/2,dW,dH);
         ctx.restore();
       }
-    }
+    });
+  }
 
     // --- list UI ---
     function updateList() {
