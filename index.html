@@ -176,30 +176,15 @@ function onLengthChange() {
   fileInputContainer.style.display = 'none';
   redrawCanvas();
 }
-      
-    initLength();
 
-    // When length changes, rebuild the width dropdown
-  function onLengthChange() {
-    const L = +lengthSelect.value;
-    widthSelect.innerHTML = '<option value="">–</option>';
-    widthSelect.disabled = !L;
-    if (L) {
-      const widths = variants
-        .filter(v => v.length === L)
-        .map(v => v.width)
-        .sort((a,b)=>a-b);
-      widths.forEach(w => {
-        const o = document.createElement('option');
-        o.value = w;
-        o.textContent = `${w}"`;
-        widthSelect.appendChild(o);
-      });
+    function onWidthChange() {
+      const L = +lengthSelect.value;
+      const W = +widthSelect.value;
+      const v = variants.find(x=>x.length===L&&x.width===W);
+      priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
+      fileInputContainer.style.display = v ? 'block' : 'none';
+      redrawCanvas();
     }
-    priceDisplay.textContent = '';
-    fileInputContainer.style.display = 'none';
-    redrawCanvas();
-  }
 
   // When width changes, show price & file input
   function onWidthChange() {
@@ -309,6 +294,7 @@ function onLengthChange() {
     }
 
       // wire events
+    initLength();
     renderBtn.addEventListener('click', redrawCanvas);
     exportBtn.addEventListener('click', exportSVG);
     fileInput.addEventListener('change', handleFileLoad);
