@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SVG Preview Widget</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Ensure width/height labels remain visible */
+    .controls label {
+      flex: 1 1 120px;
+      white-space: nowrap;
+    }
+  </style>
 </head>
 <body>
   <h1>Upload &amp; Preview Your SVGs</h1>
@@ -27,13 +34,11 @@
   <canvas id="mainCanvas"></canvas>
 
   <script>
-    // Inline widget.js content
     document.addEventListener('DOMContentLoaded', () => {
       const images = [];
       let selectedId = null;
       let dragging = false;
       let dragOffset = { x: 0, y: 0 };
-
       const DPI = 96;
       const borderPx = 4;
 
@@ -137,9 +142,25 @@
       renderBtn.addEventListener('click', redrawAll);
 
       toggleOrient.addEventListener('click', () => {
+        // Swap dimensions values
         [widthInput.value, heightInput.value] = [heightInput.value, widthInput.value];
         toggleOrient.textContent = toggleOrient.textContent.includes('Landscape')
-          ? 'Switch to Portrait' : 'Switch to Landscape';
+          ? 'Switch to Portrait'
+          : 'Switch to Landscape';
+        // Recalculate scale and reposition for all SVGs
+        const wIn = parseFloat(widthInput.value);
+        const hIn = parseFloat(heightInput.value);
+        if (!(wIn > 0 && hIn > 0)) { redrawAll(); return; }
+        const wPx = Math.round(wIn * DPI);
+        const hPx = Math.round(hIn * DPI);
+        images.forEach(item => {
+          item.fitScale = Math.min(wPx / item.origW, hPx / item.origH);
+          const drawW = item.origW * item.fitScale * item.scalePercent;
+          const drawH = item.origH * item.fitScale * item.scalePercent;
+          item.x = borderPx + (wPx - drawW) / 2;
+          item.y = borderPx + (hPx - drawH) / 2;
+        });
+        selectImage(selectedId);
         redrawAll();
       });
 
@@ -159,10 +180,10 @@
         const hPx = Math.round(hIn * DPI);
         const xmlns = 'http://www.w3.org/2000/svg';
         let svgContent = `<?xml version="1.0" encoding="UTF-8"?>`;
-        svgContent += `<svg xmlns="${xmlns}" width="${wPx+borderPx*2}" height="${hPx+borderPx*2}" viewBox="0 0 ${wPx+borderPx*2} ${hPx+borderPx*2}">`;
-        svgContent += `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
-        svgContent += `<text x="${borderPx + wPx/2}" y="${(hPx+borderPx*2)-4}" font-family="sans-serif" font-size="16" text-anchor="middle">${wIn}\"</text>`;
-        svgContent += `<text transform="translate(${wPx+borderPx*2-4},${borderPx + hPx/2}) rotate(90)" font-family="sans-serif" font-size="16" text-anchor="middle">${hIn}\"</text>`;
+        svgContent += `<svg xmlns="${xmlns}" width="${wPx + borderPx*2}" height="${hPx + borderPx*2}" viewBox="0 0 ${wPx + borderPx*2} ${hPx + borderPx*2}">`;
+        svgContent += `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx + borderPx}" height="${hPx + borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
+        svgContent += `<text x="${borderPx + wPx/2}" y="${(hPx + borderPx*2) - 4}" font-family="sans-serif" font-size="16" text-anchor="middle">${wIn}\"</text>`;
+        svgContent += `<text transform="translate(${wPx + borderPx*2 - 4},${borderPx + hPx/2}) rotate(90)" font-family="sans-serif" font-size="16" text-anchor="middle">${hIn}\"</text>`;
         images.forEach(item => {
           const drawW = item.origW * item.fitScale * item.scalePercent;
           const drawH = item.origH * item.fitScale * item.scalePercent;
@@ -181,6 +202,7 @@
         URL.revokeObjectURL(url);
       });
 
+      // Drag & drop logic
       canvas.addEventListener('mousedown', e => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -210,6 +232,7 @@
       });
       ['mouseup', 'mouseleave'].forEach(evt => canvas.addEventListener(evt, () => dragging = false));
 
+      // Load SVGs
       fileInput.addEventListener('change', e => {
         const files = Array.from(e.target.files);
         const wIn = parseFloat(widthInput.value);
@@ -230,7 +253,7 @@
               const vb = svgEl.getAttribute('viewBox')?.split(' ');
               origW = parseFloat(vb[2]); origH = parseFloat(vb[3]);
             }
-            const fitScale = Math.min(wPx/origW, hPx/origH);
+            const fitScale = Math.min(wPx / origW, hPx / origH);
             const id = Date.now() + '_' + Math.random();
             const blob = new Blob([svgText], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(blob);
@@ -240,8 +263,8 @@
               const scalePercent = 1;
               const drawW = origW * fitScale * scalePercent;
               const drawH = origH * fitScale * scalePercent;
-              const x = borderPx + (wPx - drawW)/2;
-              const y = borderPx + (hPx - drawH)/2;
+              const x = borderPx + (wPx - drawW) / 2;
+              const y = borderPx + (hPx - drawH) / 2;
               images.push({ id, svgText, image: img, origW, origH, fitScale, scalePercent, x, y });
               updateList();
               selectImage(id);
