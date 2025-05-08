@@ -39,7 +39,7 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-  const variants = [
+    const variants = [
       { length: 4, width: 4, price: 12.00 },
       { length: 4, width: 6, price: 14.00 },
       { length: 4, width: 8, price: 16.00 },
@@ -131,24 +131,24 @@
     const widthSelect  = document.getElementById('widthSelect');
     const priceDisplay = document.getElementById('priceDisplay');
     const fileInputContainer = document.getElementById('fileInputContainer');
-    const fileInput = document.getElementById('fileInput');
-    const renderBtn = document.getElementById('renderBtn');
-    const toggleBtn = document.getElementById('toggleOrientation');
-    const undoBtn   = document.getElementById('undoBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const svgList   = document.getElementById('svgList');
-    const canvas    = document.getElementById('mainCanvas');
-    const ctx       = canvas.getContext('2d');
+    const renderBtn    = document.getElementById('renderBtn');
+    const toggleBtn    = document.getElementById('toggleOrientation');
+    const undoBtn      = document.getElementById('undoBtn');
+    const exportBtn    = document.getElementById('exportBtn');
+    const svgList      = document.getElementById('svgList');
+    const fileInput    = document.getElementById('fileInput');
+    const canvas       = document.getElementById('mainCanvas');
+    const ctx          = canvas.getContext('2d');
+    const DPI = 96, borderPx = 4;
 
-    let images = [], selectedId = null;
-    let dragging = false, cropping = false;
-    let cropStart = {}, dragOffset = {x:0,y:0};
-    let history = [];
+    let images = [], selectedId = null, history = [];
+    let dragging = false, cropping = false, cropStart = {}, dragOffset = {};
 
-    function pushHistory() {
+    function pushHistory(){
       history.push(JSON.parse(JSON.stringify(images)));
-      if (history.length > 50) history.shift();
+      if(history.length>50) history.shift();
     }
+    
     undoBtn.addEventListener('click', () => {
       if (!history.length) return;
       images = history.pop();
