@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function initSelectors() {
     const valid = variants.filter(v => v.price != null);
     const lengths = [...new Set(valid.map(v => v.length))].sort((a, b) => a - b);
+    
     lenSel.innerHTML = '<option value="">–</option>';
     lengths.forEach(l => {
       const o = document.createElement('option');
@@ -166,8 +167,53 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     lenSel.disabled = false;
     lenSel.addEventListener('change', updatePriceAndCanvas);
+
+     // disable width until a length is chosen
+  widSel.innerHTML = '<option value="">–</option>';
+  widSel.disabled = true;
+
+  lenSel.addEventListener('change', onLengthChange);
+  widSel.addEventListener('change', onWidthChange);    
   }
 
+  function onLengthChange() {
+  const L = parseInt(lenSel.value, 10);
+  widSel.innerHTML = '<option value="">–</option>';
+  widSel.disabled = !L;
+
+  if (L) {
+    // only widths for this length
+    const widths = variants
+      .filter(v => v.length === L && v.price != null)
+      .map(v => v.width)
+      .sort((a,b)=>a-b);
+
+    widths.forEach(w => {
+      const o = document.createElement('option');
+      o.value = w;
+      o.textContent = `${w}"`;
+      widSel.append(o);
+    });
+  }
+
+   // clear price/file until width picked
+  priceDisplay.textContent = '';
+  fileInputContainer.style.display = 'none';
+
+function onWidthChange() {
+  const L = parseInt(lenSel.value, 10);
+  const W = parseInt(widSel.value, 10);
+  const v = variants.find(x => x.length === L && x.width === W && x.price != null);
+
+  if (v) {
+    priceDisplay.textContent = `Price: $${v.price.toFixed(2)}`;
+    fileInputContainer.style.display = 'block';
+  } else {
+    priceDisplay.textContent = '';
+    fileInputContainer.style.display = 'none';
+  }
+}
+    
   function updatePriceAndCanvas() {
     const L = parseInt(lenSel.value, 10);
     const widths = variants.filter(v => v.length === L && v.price != null).map(v => v.width).sort((a, b) => a - b);
