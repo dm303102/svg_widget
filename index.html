@@ -138,9 +138,10 @@
     const canvas       = document.getElementById('mainCanvas');
     const ctx          = canvas.getContext('2d');
     const DPI = 96, borderPx = 4;
-
+    dragOffset = {}; 
+    
     let images = [], selectedId = null, history = [];
-    let dragging = false, cropping = false, cropStart = {}, dragOffset = {};
+    let dragging = false, cropping = false, cropStart = {}, dragOffset = { x: 0, y: 0 };
 
     function pushHistory(){
       history.push(JSON.parse(JSON.stringify(images)));
