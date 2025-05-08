@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SVG Preview Widget</title>
   <link rel="stylesheet" href="styles.css">
   <style>
@@ -12,7 +13,7 @@
     #svgList li { display: flex; align-items: center; justify-content: space-between; padding: 0.3em; border-bottom: 1px solid #eee; }
     #svgList li.selected { background: #def; }
     .item-controls { display: flex; gap: 0.5em; }
-    .filename { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .filename { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     input[type=range] { width: 80px; }
   </style>
 </head>
@@ -126,312 +127,80 @@
       { length: 36, width: 12, price: 50.00 }
     ];
     
-    const lengthSelect     = document.getElementById('lengthSelect');
-    const widthSelect      = document.getElementById('widthSelect');
-    const priceDisplay     = document.getElementById('priceDisplay');
+    const DPI = 96, borderPx = 4;
+    const lengthSelect = document.getElementById('lengthSelect');
+    const widthSelect = document.getElementById('widthSelect');
+    const priceDisplay = document.getElementById('priceDisplay');
     const fileInputContainer = document.getElementById('fileInputContainer');
-    const renderBtn        = document.getElementById('renderBtn');
-    const undoBtn          = document.getElementById('undoBtn');
-    const exportBtn        = document.getElementById('exportBtn');
-    const svgList          = document.getElementById('svgList');
-    const fileInput        = document.getElementById('fileInput');
-    const canvas           = document.getElementById('mainCanvas');
-    const ctx              = canvas.getContext('2d');
-    const DPI   = 96, borderPx = 4;
+    const renderBtn = document.getElementById('renderBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const svgList = document.getElementById('svgList');
+    const fileInput = document.getElementById('fileInput');
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
     
-    let images     = [];
-    let selectedId = null;
-    let history    = [];
-    let dragging   = false;
-    let cropping   = false;
-    let cropStart  = {};
-    let dragOffset = { x: 0, y: 0 };
+    let images = [], selectedId = null, history = [];
+    let dragging = false, cropping = false, dragOffset = { x: 0, y: 0 },
+      cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
 
-    function pushHistory(){
-      // clone the array, and for each item make a shallow copy that
-      // keeps the same .image, .svgText, etc.
-      history.push(
-      images.map(item => ({ ...item }))
-      );
+    function pushHistory() {
+      history.push(images.map(item => ({ ...item })));
       if (history.length > 50) history.shift();
     }
-    
-    undoBtn.addEventListener('click', () => {
-      if (!history.length) return;
-      images = history.pop();
-      selectedId = images[0]?.id || null;
-      updateList();
-      redrawCanvas();
-    });
 
-    // --- selectors ---
-  // Populate the length dropdown
-  function initLength() {
-    const lengths = Array.from(new Set(variants.map(v=>v.length))).sort((a,b)=>a-b);
-    lengthSelect.innerHTML = '<option value="">–</option>';
-    lengths.forEach(l => {
-      const o = document.createElement('option');
-      o.value = l;
-      o.textContent = `${l}"`;
-      lengthSelect.appendChild(o);
-    });
-    lengthSelect.disabled = false;
-  }
-    
- // When length changes, rebuild the width dropdown
-  function onLengthChange() {
-    const L = +lengthSelect.value;
-    widthSelect.innerHTML = '<option value="">–</option>';
-    widthSelect.disabled = !L;
-    if (L) {
-      const widths = variants
-        .filter(v => v.length === L)
-        .map(v => v.width)
-        .sort((a,b)=>a-b);
-      widths.forEach(w => {
-        const o = document.createElement('option');
-        o.value = w;
-        o.textContent = `${w}"`;
-        widthSelect.appendChild(o);
+    function redrawCanvas() {
+      const L = +lengthSelect.value, W = +widthSelect.value;
+      if (L && W) {
+        const wPx = L * DPI, hPx = W * DPI;
+        canvas.width = wPx + 2*borderPx;
+        canvas.height = hPx + 2*borderPx;
+        ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.lineWidth = borderPx; ctx.strokeStyle = '#000';
+        ctx.strokeRect(borderPx/2, borderPx/2, wPx+borderPx, hPx+borderPx);
+        ctx.fillStyle = '#000'; ctx.font = '16px sans-serif';
+        ctx.textAlign = 'left'; ctx.fillText(`L: ${L}"`, borderPx+4, canvas.height-4);
+        ctx.textAlign = 'right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
+      }
+      images.forEach(it => {
+        const dW = it.origW * it.fitScale * it.scalePercent;
+        const dH = it.origH * it.fitScale * it.scalePercent;
+        const cx = it.x + dW/2, cy = it.y + dH/2;
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(it.rotation);
+        ctx.drawImage(it.image, -dW/2, -dH/2, dW, dH); ctx.restore();
+        if (it.id === selectedId) {
+          ctx.save(); ctx.translate(cx,cy); ctx.rotate(it.rotation);
+          ctx.strokeStyle='red'; ctx.lineWidth=2;
+          ctx.strokeRect(-dW/2, -dH/2, dW, dH);
+          ctx.restore();
+        }
       });
     }
-    priceDisplay.textContent = '';
-    fileInputContainer.style.display = 'none';
-    redrawCanvas();
-  }
 
-  // When width changes, show price & file input
-  function onWidthChange() {
-    const L = +lengthSelect.value, W = +widthSelect.value;
-    const v = variants.find(x=>x.length===L&&x.width===W);
-    priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
-    fileInputContainer.style.display = v ? 'block' : 'none';
-    redrawCanvas();
-  }
-
-undoBtn.addEventListener('click', () => {
-  if (!history.length) return;
-  images = history.pop();
-  selectedId = images[0]?.id || null;
-  updateList();
-  redrawCanvas();
-});
-    
-    // --- redraw ---
- // Draw the border + images
-  function redrawCanvas() {
-    const L = +lengthSelect.value, W = +widthSelect.value;
-      // if we *do* have a size, draw the white background + frame
-    if (L && W) {
-      wPx = L*DPI; hPx = W*DPI;
-      canvas.width  = wPx + 2*borderPx;
-      canvas.height = hPx + 2*borderPx;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.lineWidth = borderPx; ctx.strokeStyle = '#000';
-      ctx.strokeRect(borderPx/2, borderPx/2, wPx+borderPx, hPx+borderPx);
-      ctx.fillStyle = '#000'; ctx.font = '16px sans-serif';
-      ctx.textAlign='left';  ctx.fillText(`L: ${L}"`, borderPx+4, canvas.height-4);
-      ctx.textAlign='right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
-    }
-
-    images.forEach(it => {
-      const dW = it.origW * it.fitScale * it.scalePercent;
-      const dH = it.origH * it.fitScale * it.scalePercent;
-      const cx = it.x + dW/2, cy = it.y + dH/2;
-      ctx.save();
-        ctx.translate(cx,cy);
-        ctx.rotate(it.rotation || 0);
-        ctx.drawImage(it.image, -dW/2, -dH/2, dW, dH);
-      ctx.restore();
-      if (it.id === selectedId) {
-        ctx.save();
-          ctx.translate(cx,cy);
-          ctx.rotate(it.rotation || 0);
-          ctx.strokeStyle = 'red'; ctx.lineWidth = 2;
-          ctx.strokeRect(-dW/2,-dH/2,dW,dH);
-        ctx.restore();
-      }
-    });
-  }
-
-    // --- list UI ---
-    function updateList() {
+        function updateList() {
       svgList.innerHTML = '';
       images.forEach((it,i) => {
-        const li = document.createElement('li');
-        li.dataset.id = it.id;
-        if (it.id === selectedId) li.classList.add('selected');
-
-        const name = document.createElement('span');
-        name.className='filename';
-        name.textContent = it.filename||`SVG ${i+1}`;
-
-        const ctr = document.createElement('div');
-        ctr.className='item-controls';
-
-        // granular scale
-        const sl = document.createElement('input');
-        sl.type='range'; sl.min=10; sl.max=200; sl.step=0.1;
-        sl.value = (it.scalePercent*100).toFixed(1);
-        sl.dataset.id = it.id;
-
-        const cropBtn = document.createElement('button');
-        cropBtn.textContent='Crop'; cropBtn.dataset.id=it.id;
-
-        const dupBtn = document.createElement('button');
-        dupBtn.textContent='Duplicate'; dupBtn.dataset.id=it.id;
-
-        const rotL = document.createElement('button');
-        rotL.textContent='↺'; rotL.dataset.id=it.id;
-
-        const rotR = document.createElement('button');
-        rotR.textContent='↻'; rotR.dataset.id=it.id;
-
-        const delBtn = document.createElement('button');
-        delBtn.textContent='Delete'; delBtn.dataset.id=it.id;
-
-        ctr.append(sl, cropBtn, dupBtn, rotL, rotR, delBtn);
-        li.append(name, ctr);
-        svgList.append(li);
+        const li = document.createElement('li'); li.dataset.id = it.id;
+        if (it.id===selectedId) li.classList.add('selected');
+        const name = document.createElement('span'); name.className='filename';
+        name.textContent = it.filename;
+        const ctr = document.createElement('div'); ctr.className='item-controls';
+        // add buttons/range here...
+        li.append(name, ctr); svgList.append(li);
       });
     }
 
     function selectImage(id) {
-      selectedId = id;
-      updateList();
-      redrawCanvas();
+      selectedId = id; updateList(); redrawCanvas();
     }
 
-     // --- event wiring ---
-    initLength();
-    lengthSelect.addEventListener('change', onLengthChange);
-    widthSelect .addEventListener('change', onWidthChange);
-    
-    svgList.addEventListener('click', e => {
-      const li = e.target.closest('li');
-      if (!li) return;
-      const id = li.dataset.id;
-      const it = images.find(img=>img.id===id);
-      switch(e.target.textContent) {
-        case 'Delete':
-          pushHistory();
-          images = images.filter(img=>img.id!==id);
-          selectedId = images[0]?.id || null;
-          updateList(); redrawCanvas();
-          break;
-        case 'Crop':
-          selectImage(id);
-          cropping = true;
-          cropStart = { startX:null, startY:null, curX:null, curY:null };
-          break;
-        case 'Duplicate':
-          pushHistory();
-          const dup = {...it, id:Date.now()+'_'+Math.random(), x:it.x+10, y:it.y+10};
-          images.push(dup);
-          selectImage(dup.id);
-          break;
-        case '↺':
-          pushHistory();
-          it.rotation = (it.rotation||0) - Math.PI/180;
-          selectImage(id);
-          break;
-        case '↻':
-          pushHistory();
-          it.rotation = (it.rotation||0) + Math.PI/180;
-          selectImage(id);
-          break;
-        default:
-          selectImage(id);
-      }
-    });
-
-    svgList.addEventListener('input', e => {
-      if (e.target.type!=='range') return;
-      const it = images.find(img=>img.id===e.target.dataset.id);
-      pushHistory();
-      it.scalePercent = parseFloat(e.target.value)/100;
-      selectImage(it.id);
-    });
-
-    // --- canvas events ---
-    canvas.addEventListener('mousedown', e => {
-      const r = canvas.getBoundingClientRect();
-      const x = e.clientX - r.left, y = e.clientY - r.top;
-      if (cropping) {
-        cropStart.startX = x; cropStart.startY = y;
-        cropStart.curX = x;   cropStart.curY = y;
-        return;
-      }
-      // pick topmost
-      for (let i=images.length-1; i>=0; i--) {
-        const it = images[i];
-        const dW = it.origW*it.fitScale*it.scalePercent;
-        const dH = it.origH*it.fitScale*it.scalePercent;
-        if (x>=it.x && x<=it.x+dW && y>=it.y && y<=it.y+dH) {
-          selectImage(it.id);
-          break;
-        }
-      }
-      const sel = images.find(img=>img.id===selectedId);
-      if (!sel) return;
-      const dW = sel.origW*sel.fitScale*sel.scalePercent;
-      const dH = sel.origH*sel.fitScale*sel.scalePercent;
-      if (x>=sel.x && x<=sel.x+dW && y>=sel.y && y<=sel.y+dH) {
-        pushHistory();      // record this position before the move
-        dragging = true;
-        dragOffset = { x: x - sel.x, y: y - sel.y };
-      }
-    });
-    canvas.addEventListener('mousemove', e => {
-      const r = canvas.getBoundingClientRect();
-      const x = e.clientX - r.left, y = e.clientY - r.top;
-      if (cropping && cropStart.startX!=null) {
-        cropStart.curX = x; cropStart.curY = y;
-        redrawCanvas();
-        return;
-      }
-      if (dragging) {
-        const sel = images.find(img=>img.id===selectedId);
-        sel.x = x - dragOffset.x;
-        sel.y = y - dragOffset.y;
-        redrawCanvas();
-      }
-    });
-
-    renderBtn.addEventListener('click', redrawCanvas);
-
-  exportBtn.addEventListener('click', () => {
+    function handleFileLoad(e) {
       const L = +lengthSelect.value, W = +widthSelect.value;
-      if (!(L && W)) return;
-      const wPx=L*DPI, hPx=W*DPI;
-      const xmlns='http://www.w3.org/2000/svg';
-      let out = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="${xmlns}" width="${wPx+borderPx*2}" height="${hPx+borderPx*2}" viewBox="0 0 ${wPx+borderPx*2} ${hPx+borderPx*2}">`;
-      out += `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
-      out += `<text x="${borderPx+4}" y="${hPx+borderPx*2-4}" font-size="16">L: ${L}"</text>`;
-      out += `<text x="${wPx+borderPx*2-4}" y="${hPx+borderPx*2-4}" font-size="16" text-anchor="end">W: ${W}"</text>`;
-      images.forEach(it=>{
-        const dW=it.origW*it.fitScale*it.scalePercent, dH=it.origH*it.fitScale*it.scalePercent;
-        out += `<svg x="${it.x}" y="${it.y}" width="${dW}" height="${dH}" viewBox="0 0 ${it.origW} ${it.origH}" xmlns="${xmlns}">`;
-        out += new DOMParser().parseFromString(it.svgText,'image/svg+xml').documentElement.innerHTML;
-        out += `</svg>`;
-      });
-      out += `</svg>`;
-      const blob=new Blob([out],{type:'image/svg+xml'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url; a.download='canvas-export.svg'; a.click();
-      URL.revokeObjectURL(url);
-    });
-
-    // --- file load ---
-    fileInput.addEventListener('change', e => {
-      const L = +lengthSelect.value, W = +widthSelect.value;
-      if (!(L && W)) return;
+      if (!(L&&W)) return;
       const wPx = L*DPI, hPx = W*DPI;
       Array.from(e.target.files).forEach(file => {
-        const r = new FileReader();
-        r.onload = ev => {
+        const reader = new FileReader();
+        reader.onload = ev => {
           const txt = ev.target.result;
           const doc = new DOMParser().parseFromString(txt,'image/svg+xml');
           const svgEl = doc.documentElement;
@@ -439,71 +208,174 @@ undoBtn.addEventListener('click', () => {
           const origH = parseFloat(svgEl.getAttribute('height'))|| parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
           const fitScale = Math.min(wPx/origW, hPx/origH);
           const dW = origW*fitScale, dH = origH*fitScale;
-          const x = borderPx + (wPx-dW)/2, y = borderPx + (hPx-dH)/2;
+          const x = borderPx+(wPx-dW)/2, y = borderPx+(hPx-dH)/2;
           const id = Date.now()+'_'+Math.random();
           const img = new Image();
-          img.onload = ()=> {
-            images.push({ id, filename: file.name, svgText: txt, image: img,
-                          origW, origH, fitScale, scalePercent:1, rotation:0, x, y });
-            pushHistory();
-            selectImage(id);
+          img.onload = ()=>{
+            images.push({ id, filename:file.name, image:img, svgText:txt, origW, origH, fitScale,
+                          scalePercent:1, rotation:0, x, y});
+            pushHistory(); selectImage(id);
           };
           img.src = URL.createObjectURL(new Blob([txt],{type:'image/svg+xml'}));
         };
-        r.readAsText(file);
+        reader.readAsText(file);
       });
-      fileInput.value = ''; // allow re-upload
-    });
-    
-    ['mouseup'].forEach(ev=>{
-    canvas.addEventListener(ev, ()=>{
-    if (cropping && cropStart.startX!=null) {
-      const it = images.find(img => img.id === selectedId);
-      // 1) compute the crop region relative to the image:
-      const x0 = Math.min(cropStart.startX, cropStart.curX) - it.x;
-      const y0 = Math.min(cropStart.startY, cropStart.curY) - it.y;
-      const w0 = Math.abs(cropStart.curX - cropStart.startX);
-      const h0 = Math.abs(cropStart.curY - cropStart.startY);
+    }
 
-      // 2) push history _before_ we mutate:
-      pushHistory();
+    function exportSVG() {
+      const L = +lengthSelect.value, W = +widthSelect.value;
+      if (!(L&&W)) return;
+      const wPx=L*DPI, hPx=W*DPI;
+      const xmlns='http://www.w3.org/2000/svg';
+      let out = `<svg xmlns="${xmlns}" width="${wPx+2*borderPx}" height="${hPx+2*borderPx}" viewBox="0 0 ${wPx+2*borderPx} ${hPx+2*borderPx}">`;
+      out += `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
+      images.forEach(it=>{
+        const dW=it.origW*it.fitScale*it.scalePercent;
+        const dH=it.origH*it.fitScale*it.scalePercent;
+        out += `<svg x="${it.x}" y="${it.y}" width="${dW}" height="${dH}" viewBox="0 0 ${it.origW} ${it.origH}" xmlns="${xmlns}">`;
+        out += new DOMParser().parseFromString(it.svgText,'image/svg+xml').documentElement.innerHTML;
+        out += `</svg>`;
+      });
+      out += `</svg>`;
+      const blob = new Blob([out],{type:'image/svg+xml'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='canvas-export.svg'; a.click(); URL.revokeObjectURL(url);
+    }
 
-      // 3) draw that region into a temp canvas:
-      const tmp = document.createElement('canvas');
-      tmp.width  = w0;
-      tmp.height = h0;
-      const tctx = tmp.getContext('2d');
-      tctx.drawImage(it.image,
-        x0, y0, w0, h0,    // source
-        0,  0,  w0, h0     // dest
-      );
+      // wire events
+    renderBtn.addEventListener('click', redrawCanvas);
+    exportBtn.addEventListener('click', exportSVG);
+    fileInput.addEventListener('change', handleFileLoad);
+    undoBtn.addEventListener('click', () => { if(!history.length) return; images = history.pop(); selectImage(images[0]?.id); });
+    lengthSelect.addEventListener('change', onLengthChange);
+    widthSelect.addEventListener('change', onWidthChange);
+    svgList.addEventListener('click', e => { /* handle select/dup/rotate/delete/crop */ });
 
-      // 4) replace the Image object with the cropped one
-      const newImg = new Image();
-      newImg.onload = () => {
-        it.image        = newImg;
-        it.origW        = w0;
-        it.origH        = h0;
-        it.fitScale     = 1;        // you can recalc if you like
-        it.scalePercent = 1;
-        it.x = borderPx + (canvas.width/2 - w0/2);
-        it.y = borderPx + (canvas.height/2 - h0/2);
+    // canvas dragging & cropping
+// 1) MOUSE DOWN
+canvas.addEventListener('mousedown', e => {
+  const { x, y } = toCanvasCoords(e);
 
-        cropping = false;
-        updateList();
-        redrawCanvas();
-      };
-      newImg.src = tmp.toDataURL();
+  if (cropping) {
+    // Begin crop rectangle
+    cropStart.startX = cropStart.curX = x;
+    cropStart.startY = cropStart.curY = y;
+    return;
+  }
+
+  // See if click lands inside the currently selected image:
+  const sel = images.find(img => img.id === selectedId);
+  if (sel && hitTest(sel, x, y)) {
+    // prepare to drag
+    dragging = true;
+    // record offset from img origin so it doesn’t “jump”
+    dragOffset.x = x - sel.x;
+    dragOffset.y = y - sel.y;
+    pushHistory();  // snapshot before move
+  }
+});
+
+// 2) MOUSE MOVE
+canvas.addEventListener('mousemove', e => {
+  const { x, y } = toCanvasCoords(e);
+
+  if (cropping && cropStart.startX != null) {
+    // update crop rectangle
+    cropStart.curX = x;
+    cropStart.curY = y;
+    redrawCanvas();       // draw existing images...
+    drawCropOverlay();    // ...then draw the semi‑transparent box
+    return;
+  }
+
+  if (dragging) {
+    // move the selected image
+    const sel = images.find(img => img.id === selectedId);
+    sel.x = x - dragOffset.x;
+    sel.y = y - dragOffset.y;
+    redrawCanvas();
+  }
+});
+
+// 3) MOUSE UP / LEAVE
+['mouseup','mouseleave'].forEach(evt =>
+  canvas.addEventListener(evt, () => {
+    if (cropping && cropStart.startX != null) {
+      finalizeCrop();
     }
     if (dragging) {
-    // we already updated it.x/it.y in mousemove
-    updateList();     // refresh the red highlight in <ul>
-    redrawCanvas();   // make sure we draw the last position
+      // done moving: refresh list highlight & canvas
+      updateList();
+      redrawCanvas();
     }
-    dragging = false;
-  });
- });
+    // reset flags
+    dragging = cropping = false;
+  })
+);
+
+// ————————————————————————————————————————————————
+// helper functions:
+
+function toCanvasCoords(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+function hitTest(img, x, y) {
+  // simple AABB test (ignores rotation for brevity)
+  const w = img.origW * img.fitScale * img.scalePercent;
+  const h = img.origH * img.fitScale * img.scalePercent;
+  return x >= img.x && x <= img.x + w && y >= img.y && y <= img.y + h;
+}
+
+function drawCropOverlay() {
+  const { startX, startY, curX, curY } = cropStart;
+  const x0 = Math.min(startX, curX), y0 = Math.min(startY, curY);
+  const w0 = Math.abs(curX - startX),  h0 = Math.abs(curY - startY);
+
+  ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(x0, y0, w0, h0);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x0, y0, w0, h0);
+  ctx.restore();
+}
+
+function finalizeCrop() {
+  const it = images.find(img => img.id === selectedId);
+  const { startX, startY, curX, curY } = cropStart;
+  const x0 = Math.min(startX, curX) - it.x;
+  const y0 = Math.min(startY, curY) - it.y;
+  const w0 = Math.abs(curX - startX);
+  const h0 = Math.abs(curY - startY);
+
+  pushHistory();  // snapshot before cropping
+
+  // draw the selected region into a temp canvas
+  const tmp = document.createElement('canvas');
+  tmp.width = w0;  tmp.height = h0;
+  const tctx = tmp.getContext('2d');
+  tctx.drawImage(it.image, x0, y0, w0, h0, 0, 0, w0, h0);
+
+  // replace image with the cropped one
+  const newImg = new Image();
+  newImg.onload = () => {
+    it.image        = newImg;
+    it.origW        = w0;
+    it.origH        = h0;
+    it.fitScale     = 1;
+    it.scalePercent = 1;
+    // re‑center in canvas
+    it.x = borderPx + (canvas.width/2 - w0/2);
+    it.y = borderPx + (canvas.height/2 - h0/2);
+
+    updateList();
+    redrawCanvas();
+  };
+  newImg.src = tmp.toDataURL();
+}
+    initLength();
   </script>
 </body>
 </html>
-
