@@ -134,31 +134,9 @@
       { length: 36, width: 12, price: 50.00 }
     ];
     
-    // Initialize selectors
-    (function initSelectors(){
-      const lengths = [...new Set(variants.map(v=>v.length))].sort((a,b)=>a-b);
-      const these = [...new Set(variants.filter(v=>v.price).map(v=>v.length))].sort((a,b)=>a-b);
-      lenSel.innerHTML = '<option value="">–</option>';
-      these.forEach(l => {
-        const opt = document.createElement('option');
-        opt.value = l;
-        opt.textContent = `${l}"`; 
-        lenSel.append(opt);
-      });
-      lenSel.addEventListener('change', onLengthChange);
-      widSel.addEventListener('change', updatePriceAndCanvas);
-    })();
-    
-    const images = [];
-    let selectedId = null;
-    let dragging = false;
-    let dragOffset = { x:0, y:0 };
-    let handleCenter = { x:0, y:0 };
-    const DPI = 96, borderPx = 4;
-
-    // Elements
-    //const lenSel = document.getElementById('lengthSelect');
-    //const widSel = document.getElementById('widthSelect');
+        // DOM elements
+    const lenSel = document.getElementById('lengthSelect');
+    const widSel = document.getElementById('widthSelect');
     const priceDisplay = document.getElementById('priceDisplay');
     const renderBtn = document.getElementById('renderBtn');
     const toggleBtn = document.getElementById('toggleOrientation');
@@ -169,38 +147,56 @@
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Initialize selectors
-    (function initSelectors(){
-      const lengths = [...new Set(variants.map(v=>v.length))].sort((a,b)=>a-b);
+    let images = [];
+    let selectedId = null;
+    let dragging = false;
+    let dragOffset = { x: 0, y: 0 };
+    let handleCenter = { x: 0, y: 0 };
+    const DPI = 96, borderPx = 4;
+
+    // Populate Length selector with only valid price variants
+    function initSelectors() {
+      lenSel.innerHTML = '<option value="">–</option>';
+      const lengths = [...new Set(variants.filter(v=>v.price != null).map(v=>v.length))].sort((a,b)=>a-b);
       lengths.forEach(l=>{
-        const opt = document.createElement('option'); opt.value = l; opt.textContent = `${l}"`;
+        const opt = document.createElement('option');
+        opt.value = l; opt.textContent = `${l}"`;
         lenSel.append(opt);
       });
+      lenSel.disabled = false;
       lenSel.addEventListener('change', onLengthChange);
       widSel.addEventListener('change', updatePriceAndCanvas);
-    })();
+    }
 
-    function onLengthChange(){
+    function onLengthChange() {
       widSel.innerHTML = '<option value="">–</option>';
       priceDisplay.textContent = '';
-      const L = parseInt(lenSel.value);
-      if(!L){ widSel.disabled = true; return; }
+      const L = parseInt(lenSel.value, 10);
+      if (!L) {
+        widSel.disabled = true;
+        return;
+      }
       widSel.disabled = false;
-      const widths = variants.filter(v=>v.length===L).map(v=>v.width).sort((a,b)=>a-b);
+      const widths = [...new Set(
+        variants.filter(v=>v.length===L && v.price != null).map(v=>v.width)
+      )].sort((a,b)=>a-b);
       widths.forEach(w=>{
-        const opt = document.createElement('option'); opt.value = w; opt.textContent = `${w}"`;
+        const opt = document.createElement('option');
+        opt.value = w; opt.textContent = `${w}"`;
         widSel.append(opt);
       });
     }
 
-    function updatePriceAndCanvas(){
-      const L = parseInt(lenSel.value), W = parseInt(widSel.value);
-      const v = variants.find(x=>x.length===L && x.width===W);
-      priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
-      if(v) fileInputContainer.style.display = 'block';
-      // now call redrawCanvas()
+    function updatePriceAndCanvas() {
+      const L = parseInt(lenSel.value, 10), W = parseInt(widSel.value, 10);
+      const variant = variants.find(v=>v.length===L && v.width===W && v.price != null);
+      priceDisplay.textContent = variant ? `Price: $${variant.price.toFixed(2)}` : '';
+      fileInputContainer.style.display = variant ? 'block' : 'none';
     }
 
+    // Initial setup
+    initSelectors();
+    
     function redrawCanvas(){
       const L = parseInt(lenSel.value), W = parseInt(widSel.value);
       if(!(L && W)){ fileInputContainer.style.display='none'; return; }
