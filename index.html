@@ -221,17 +221,19 @@ undoBtn.addEventListener('click', () => {
  // Draw the border + images
   function redrawCanvas() {
     const L = +lengthSelect.value, W = +widthSelect.value;
-    if (!(L && W)) return;
-    const wPx = L*DPI, hPx = W*DPI;
-    canvas.width  = wPx + 2*borderPx;
-    canvas.height = hPx + 2*borderPx;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
-    ctx.lineWidth = borderPx; ctx.strokeStyle = '#000';
-    ctx.strokeRect(borderPx/2, borderPx/2, wPx+borderPx, hPx+borderPx);
-    ctx.fillStyle = '#000'; ctx.font = '16px sans-serif';
-    ctx.textAlign='left';  ctx.fillText(`L: ${L}"`, borderPx+4, canvas.height-4);
-    ctx.textAlign='right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
+      // if we *do* have a size, draw the white background + frame
+    if (L && W) {
+      wPx = L*DPI; hPx = W*DPI;
+      canvas.width  = wPx + 2*borderPx;
+      canvas.height = hPx + 2*borderPx;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.lineWidth = borderPx; ctx.strokeStyle = '#000';
+      ctx.strokeRect(borderPx/2, borderPx/2, wPx+borderPx, hPx+borderPx);
+      ctx.fillStyle = '#000'; ctx.font = '16px sans-serif';
+      ctx.textAlign='left';  ctx.fillText(`L: ${L}"`, borderPx+4, canvas.height-4);
+      ctx.textAlign='right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
+    }
 
     images.forEach(it => {
       const dW = it.origW * it.fitScale * it.scalePercent;
