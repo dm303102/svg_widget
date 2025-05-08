@@ -20,7 +20,7 @@ const forcedW = parseInt(params.get('width'));
 const forcedH = parseInt(params.get('height'));
   
   <input type="file" id="fileInput" accept=".svg" />
-  <p id="dimensions">Width: — Height: —</p>
+  <p id="dimensions">Width: ${forcedW} Height: ${forcedH}</p>
   <div id="preview"></div>
 
   <script>
@@ -48,11 +48,11 @@ const forcedH = parseInt(params.get('height'));
             }
           }
 
-          document.getElementById('dimensions')
-            .textContent = `Width: ${w}px Height: ${h}px`;
+          //document.getElementById('dimensions')
+           // .textContent = `Width: ${w}px Height: ${h}px`;
 
           // inject the raw SVG for live preview
-          document.getElementById('preview').innerHTML = svgText;
+          //document.getElementById('preview').innerHTML = svgText;
         };
         reader.readAsText(file);
       });
