@@ -420,16 +420,22 @@
 
     toggleBtn.addEventListener('click', () => {
       // 1) stash the old values
-      const oldL = lengthSelect.value;
-      const oldW = widthSelect.value;
-    
+      const oldL = +lengthSelect.value;
+      const oldW = +widthSelect.value;
+      if (!oldL || !oldW) return;            // nothing to swap until both are set
+      
       // 2) swap them
       lengthSelect.value = oldW;
-      lengthSelect.dispatchEvent(new Event('change'));
+      onLengthChange();
 
-      widthSelect.value = oldL;
-      widthSelect.dispatchEvent(new Event('change'));
-    
+      // 2) now the widthSelect has exactly those widths valid for length=oldW
+      //    only re‑apply oldL if it really is an option
+      const found = Array.from(widthSelect.options)
+                         .some(o => +o.value === oldL);
+
+      widthSelect.value = found ? oldL : "";
+      onWidthChange();
+      
       // 3) re‐draw everything
       //updateList();
       redrawCanvas();
