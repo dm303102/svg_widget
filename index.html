@@ -10,25 +10,40 @@
       max-width: 100%;
       margin-top: 1em;
     }
+    #staticPreview {
+      display: block;
+      margin-top: 1em;
+    }
   </style>
 </head>
 <body>
-  <h1>Upload & Preview your SVG</h1>
-  <input type="file" id="fileInput" accept=".svg" />
-  <div id="preview"></div>
+  <h1>Upload &amp; Preview your SVG</h1>
 
+  <!-- file input -->
+  <input type="file" id="fileInput" accept=".svg" />
+
+  <!-- placeholders for JS to fill -->
+  <p id="dimensions">Width: — Height: —</p>
+  <div id="preview"></div>
+  <img id="staticPreview" alt="Your design @ specified dimensions" />
+
+  <!-- script at end so DOM nodes exist -->
   <script>
-    document.getElementById('fileInput')
-      .addEventListener('change', function(e) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const fileInput = document.getElementById('fileInput');
+      const dims      = document.getElementById('dimensions');
+      const preview   = document.getElementById('preview');
+
+      fileInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = function(evt) {
           const svgText = evt.target.result;
-          const parser = new DOMParser();
-          const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
-          const svgEl = svgDoc.documentElement;
+          const parser  = new DOMParser();
+          const svgDoc  = parser.parseFromString(svgText, 'image/svg+xml');
+          const svgEl   = svgDoc.documentElement;
 
           // read width/height attributes, or fallback to viewBox
           let w = svgEl.getAttribute('width');
@@ -42,16 +57,43 @@
             }
           }
 
-          //document.getElementById('dimensions')
-           // .textContent = `Width: ${w}px Height: ${h}px`;
+          // update the dimensions text
+          dims.textContent = `Width: ${w}px Height: ${h}px`;
 
           // inject the raw SVG for live preview
-          //document.getElementById('preview').innerHTML = svgText;
+          preview.innerHTML = svgText;
+
+          // OPTIONAL: draw a static PNG at that size
+          // (uncomment if you need it)
+          /*
+          svgTextToPngDataUrl(svgText, parseInt(w), parseInt(h), (pngDataUrl) => {
+            document.getElementById('staticPreview').src = pngDataUrl;
+          });
+          */
         };
+
         reader.readAsText(file);
       });
+
+      // helper to rasterize SVG into PNG
+      function svgTextToPngDataUrl(svgText, w, h, callback) {
+        const blob = new Blob([svgText], { type: 'image/svg+xml' });
+        const url  = URL.createObjectURL(blob);
+        const img  = new Image();
+
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width  = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          URL.revokeObjectURL(url);
+          callback(canvas.toDataURL('image/png'));
+        };
+
+        img.src = url;
+      }
+    });
   </script>
-    <p id="dimensions"Width: ${w} Height: ${h}`</p>
-  <img id="staticPreview" alt="Your design @ specified dimensions" />
 </body>
 </html>
