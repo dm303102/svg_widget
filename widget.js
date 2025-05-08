@@ -91,6 +91,28 @@ const hPx  = Math.round(hIn * DPI);
   const forcedW = parseInt(params.get('width'));
   const forcedH = parseInt(params.get('height'));
 
+
+renderBtn.addEventListener('click', () => {
+  if (!uploadedSvgText) {
+    return alert('Upload an SVG first!');
+  }
+
+  // 1) read inches from your inputs
+  const wIn = parseFloat(widthInput.value);
+  const hIn = parseFloat(heightInput.value);
+  if (!(wIn > 0 && hIn > 0)) {
+    return alert('Enter valid width/height in inches.');
+  }
+
+  // 2) convert to px
+  const DPI = 96;
+  const wPx = Math.round(wIn * DPI);
+  const hPx = Math.round(hIn * DPI);
+
+  // 3) draw the bordered, aspect‑fit preview
+  drawSvgWithBorder(uploadedSvgText, wPx, hPx, /*borderPx=*/6);
+});
+
 if (forcedW && forcedH && uploadedSvgText) {
   svgTextToPngDataUrl(uploadedSvgText, forcedW, forcedH, (pngDataUrl) => {
     // show it:
