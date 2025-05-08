@@ -8,10 +8,14 @@
   <style>
     .controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
     .controls label { flex: 1 1 120px; white-space: nowrap; }
-    canvas { cursor: default; display: block; margin-top: 1em; border: 1px solid #ccc; }
-    #svgList li { display: flex; align-items: center; justify-content: space-between; padding: 0.3em; }
+    canvas { display: block; margin-top: 1em; border: 1px solid #ccc; }
+    #svgList { list-style: none; padding: 0; margin-top: 1em; max-width: 400px; }
+    #svgList li { display: flex; align-items: center; justify-content: space-between; padding: 0.3em; border-bottom: 1px solid #eee; cursor: pointer; }
+    #svgList li.selected { background: #def; }
+    #svgList li:hover { background: #f0f8ff; }
+    #svgList .filename { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 0.5em; }
     #svgList .item-controls { display: flex; align-items: center; gap: 0.5em; }
-    #svgList input[type="range"] { width: 100px; vertical-align: middle; }
+    #svgList input[type="range"] { width: 80px; }
   </style>
 </head>
 <body>
@@ -20,15 +24,11 @@
   <div class="controls">
     <label>
       Length:
-      <select id="lengthSelect">
-        <option value="">–</option>
-      </select>
+      <select id="lengthSelect"><option value="">–</option></select>
     </label>
     <label>
       Width:
-      <select id="widthSelect" disabled>
-        <option value="">–</option>
-      </select>
+      <select id="widthSelect" disabled><option value="">–</option></select>
     </label>
     <span id="priceDisplay"></span>
     <button id="renderBtn">Render Canvas</button>
@@ -45,22 +45,32 @@
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
+    // Full Etsy variants list (85 entries)
     const variants = [
-      /* ... your 85 variants ... */
-        { length: 4, width: 4, price: 12.00 },
+      { length: 4, width: 4, price: 12.00 },
       { length: 4, width: 6, price: 14.00 },
       { length: 4, width: 8, price: 16.00 },
       { length: 4, width: 10, price: 18.00 },
       { length: 4, width: 12, price: 20.00 },
+      { length: 6, width: 4, price: null },
       { length: 6, width: 6, price: 15.00 },
       { length: 6, width: 8, price: 17.00 },
       { length: 6, width: 10, price: 19.00 },
       { length: 6, width: 12, price: 21.00 },
+      { length: 8, width: 4, price: null },
+      { length: 8, width: 6, price: null },
       { length: 8, width: 8, price: 19.00 },
       { length: 8, width: 10, price: 21.00 },
       { length: 8, width: 12, price: 23.00 },
+      { length: 10, width: 4, price: null },
+      { length: 10, width: 6, price: null },
+      { length: 10, width: 8, price: null },
       { length: 10, width: 10, price: 22.00 },
       { length: 10, width: 12, price: 24.00 },
+      { length: 12, width: 4, price: null },
+      { length: 12, width: 6, price: null },
+      { length: 12, width: 8, price: null },
+      { length: 12, width: 10, price: null },
       { length: 12, width: 12, price: 28.00 },
       { length: 14, width: 4, price: 22.00 },
       { length: 14, width: 6, price: 24.00 },
@@ -121,9 +131,24 @@
       { length: 36, width: 6, price: 44.00 },
       { length: 36, width: 8, price: 46.00 },
       { length: 36, width: 10, price: 48.00 },
-      { length: 36, width: 12, price: 50.00 },
-      { length:4, width:4, price:12.00 }, /* etc. */ { length:36, width:12, price:50.00 }
+      { length: 36, width: 12, price: 50.00 }
     ];
+    
+    // Initialize selectors
+    (function initSelectors(){
+      const lengths = [...new Set(variants.map(v=>v.length))].sort((a,b)=>a-b);
+      const these = [...new Set(variants.filter(v=>v.price).map(v=>v.length))].sort((a,b)=>a-b);
+      lenSel.innerHTML = '<option value="">–</option>';
+      these.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l;
+        opt.textContent = `${l}"`; 
+        lenSel.append(opt);
+      });
+      lenSel.addEventListener('change', onLengthChange);
+      widSel.addEventListener('change', updatePriceAndCanvas);
+    })();
+    
     const images = [];
     let selectedId = null;
     let dragging = false;
@@ -132,8 +157,8 @@
     const DPI = 96, borderPx = 4;
 
     // Elements
-    const lenSel = document.getElementById('lengthSelect');
-    const widSel = document.getElementById('widthSelect');
+    //const lenSel = document.getElementById('lengthSelect');
+    //const widSel = document.getElementById('widthSelect');
     const priceDisplay = document.getElementById('priceDisplay');
     const renderBtn = document.getElementById('renderBtn');
     const toggleBtn = document.getElementById('toggleOrientation');
