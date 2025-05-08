@@ -398,59 +398,10 @@ undoBtn.addEventListener('click', () => {
         redrawCanvas();
       }
     });
- 
-    ['mouseup','mouseleave'].forEach(ev=>{
-  canvas.addEventListener(ev, ()=>{
-    if (cropping && cropStart.startX!=null) {
-      const it = images.find(img => img.id === selectedId);
-      // 1) compute the crop region relative to the image:
-      const x0 = Math.min(cropStart.startX, cropStart.curX) - it.x;
-      const y0 = Math.min(cropStart.startY, cropStart.curY) - it.y;
-      const w0 = Math.abs(cropStart.curX - cropStart.startX);
-      const h0 = Math.abs(cropStart.curY - cropStart.startY);
 
-      // 2) push history _before_ we mutate:
-      pushHistory();
-
-      // 3) draw that region into a temp canvas:
-      const tmp = document.createElement('canvas');
-      tmp.width  = w0;
-      tmp.height = h0;
-      const tctx = tmp.getContext('2d');
-      tctx.drawImage(it.image,
-        x0, y0, w0, h0,    // source
-        0,  0,  w0, h0     // dest
-      );
-
-      // 4) replace the Image object with the cropped one
-      const newImg = new Image();
-      newImg.onload = () => {
-        it.image        = newImg;
-        it.origW        = w0;
-        it.origH        = h0;
-        it.fitScale     = 1;        // you can recalc if you like
-        it.scalePercent = 1;
-        it.x = borderPx + (canvas.width/2 - w0/2);
-        it.y = borderPx + (canvas.height/2 - h0/2);
-
-        cropping = false;
-        updateList();
-        redrawCanvas();
-      };
-      newImg.src = tmp.toDataURL();
-    }
-    if (dragging) {
-    // we already updated it.x/it.y in mousemove
-    updateList();     // refresh the red highlight in <ul>
-    redrawCanvas();   // make sure we draw the last position
-    }
-    dragging = false;
-  });
- });
-    
     renderBtn.addEventListener('click', redrawCanvas);
 
-    exportBtn.addEventListener('click', () => {
+  exportBtn.addEventListener('click', () => {
       const L = +lengthSelect.value, W = +widthSelect.value;
       if (!(L && W)) return;
       const wPx=L*DPI, hPx=W*DPI;
@@ -503,8 +454,55 @@ undoBtn.addEventListener('click', () => {
       });
       fileInput.value = ''; // allow re-upload
     });
+    
+    ['mouseup'].forEach(ev=>{
+    canvas.addEventListener(ev, ()=>{
+    if (cropping && cropStart.startX!=null) {
+      const it = images.find(img => img.id === selectedId);
+      // 1) compute the crop region relative to the image:
+      const x0 = Math.min(cropStart.startX, cropStart.curX) - it.x;
+      const y0 = Math.min(cropStart.startY, cropStart.curY) - it.y;
+      const w0 = Math.abs(cropStart.curX - cropStart.startX);
+      const h0 = Math.abs(cropStart.curY - cropStart.startY);
 
-  });  
+      // 2) push history _before_ we mutate:
+      pushHistory();
+
+      // 3) draw that region into a temp canvas:
+      const tmp = document.createElement('canvas');
+      tmp.width  = w0;
+      tmp.height = h0;
+      const tctx = tmp.getContext('2d');
+      tctx.drawImage(it.image,
+        x0, y0, w0, h0,    // source
+        0,  0,  w0, h0     // dest
+      );
+
+      // 4) replace the Image object with the cropped one
+      const newImg = new Image();
+      newImg.onload = () => {
+        it.image        = newImg;
+        it.origW        = w0;
+        it.origH        = h0;
+        it.fitScale     = 1;        // you can recalc if you like
+        it.scalePercent = 1;
+        it.x = borderPx + (canvas.width/2 - w0/2);
+        it.y = borderPx + (canvas.height/2 - h0/2);
+
+        cropping = false;
+        updateList();
+        redrawCanvas();
+      };
+      newImg.src = tmp.toDataURL();
+    }
+    if (dragging) {
+    // we already updated it.x/it.y in mousemove
+    updateList();     // refresh the red highlight in <ul>
+    redrawCanvas();   // make sure we draw the last position
+    }
+    dragging = false;
+  });
+ });
   </script>
 </body>
 </html>
