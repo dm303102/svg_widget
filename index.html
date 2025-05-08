@@ -27,7 +27,6 @@
     </label>
     <span id="priceDisplay"></span>
     <button id="renderBtn">Render Canvas</button>
-    <button id="toggleOrientation">Switch to Landscape</button>
     <button id="undoBtn">Undo</button>
     <button id="exportBtn">Export (SVG)</button>
   </div>
@@ -132,7 +131,6 @@
     const priceDisplay = document.getElementById('priceDisplay');
     const fileInputContainer = document.getElementById('fileInputContainer');
     const renderBtn    = document.getElementById('renderBtn');
-    const toggleBtn    = document.getElementById('toggleOrientation');
     const undoBtn      = document.getElementById('undoBtn');
     const exportBtn    = document.getElementById('exportBtn');
     const svgList      = document.getElementById('svgList');
@@ -417,33 +415,6 @@
     });
 
     renderBtn.addEventListener('click', redrawCanvas);
-
-    toggleBtn.addEventListener('click', () => {
-      // 1) stash the old values
-      const oldL = +lengthSelect.value;
-      const oldW = +widthSelect.value;
-      if (!oldL || !oldW) return;            // nothing to swap until both are set
-      
-      // 2) swap them
-      lengthSelect.value = oldW;
-      onLengthChange();
-
-      // 2) now the widthSelect has exactly those widths valid for length=oldW
-      //    only re‑apply oldL if it really is an option
-      const found = Array.from(widthSelect.options)
-                         .some(o => +o.value === oldL);
-
-      widthSelect.value = found ? oldL : "";
-      onWidthChange();
-      
-      // 3) re‐draw everything
-      //updateList();
-      redrawCanvas();
-    
-      toggleBtn.textContent = toggleBtn.textContent.includes('Landscape')
-        ? 'Switch to Portrait'
-        : 'Switch to Landscape';
-    });
 
     exportBtn.addEventListener('click', () => {
       const L = +lengthSelect.value, W = +widthSelect.value;
