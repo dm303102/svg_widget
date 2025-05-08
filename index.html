@@ -8,6 +8,9 @@
   <style>
     .controls label { flex: 1 1 120px; white-space: nowrap; }
     canvas { cursor: default; }
+    /* Slider styling inside list */
+    .svg-item .scale-slider { width: 80px; margin: 0 0.5em; vertical-align: middle; }
+    .svg-item .scale-value { min-width: 30px; display: inline-block; }
   </style>
 </head>
 <body>
@@ -35,9 +38,9 @@
       let selectedId = null;
       let dragging = false;
       let dragOffset = { x: 0, y: 0 };
+      let handleCenter = { x: 0, y: 0 };
       const DPI = 96;
       const borderPx = 4;
-      const handleSize = 12;
 
       const widthInput = document.getElementById('widthInput');
       const heightInput = document.getElementById('heightInput');
@@ -69,42 +72,61 @@
         ctx.lineWidth = borderPx; ctx.strokeStyle = '#000';
         ctx.strokeRect(borderPx/2, borderPx/2, wPx + borderPx, hPx + borderPx);
 
-        ctx.fillStyle = '#000'; ctx.font = '16px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText(`${wIn}\"`, borderPx + wPx/2, canvas.height - 4);
-        ctx.save(); ctx.translate(canvas.width - 4, borderPx + hPx/2); ctx.rotate(Math.PI/2);
-        ctx.fillText(`${hIn}\"`, 0, 0); ctx.restore();
+        ctx.fillStyle = '#000'; ctx.font = '16px sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText(`W: ${wIn}\"`, borderPx + 4, canvas.height - 4);
+        ctx.textAlign = 'right';
+        ctx.fillText(`H: ${hIn}\"`, canvas.width - borderPx - 4, canvas.height - 4);
 
         images.forEach(item => {
           const drawW = item.origW * item.fitScale * item.scalePercent;
           const drawH = item.origH * item.fitScale * item.scalePercent;
           ctx.drawImage(item.image, item.x, item.y, drawW, drawH);
-          if (item.id === selectedId) {
-            ctx.lineWidth = 2; ctx.strokeStyle = 'red';
-            ctx.strokeRect(item.x, item.y, drawW, drawH);
-            // move handle only at top-left
-            ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
-            ctx.fillRect(item.x - handleSize/2, item.y - handleSize/2, handleSize, handleSize);
-            ctx.strokeRect(item.x - handleSize/2, item.y - handleSize/2, handleSize, handleSize);
-          }
         });
+        if (selectedId) {
+          const item = images.find(i => i.id === selectedId);
+          const drawW = item.origW * item.fitScale * item.scalePercent;
+          const drawH = item.origH * item.fitScale * item.scalePercent;
+          ctx.lineWidth = 2; ctx.strokeStyle = 'red';
+          ctx.strokeRect(item.x, item.y, drawW, drawH);
+          handleCenter.x = item.x + drawW/2;
+          handleCenter.y = item.y - 12;
+          ctx.beginPath(); ctx.arc(handleCenter.x, handleCenter.y, 8, 0, 2*Math.PI);
+          ctx.fillStyle = '#3498db'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.stroke();
+        }
       }
 
       function updateList() {
         svgList.innerHTML = '';
         images.forEach((item, index) => {
           const li = document.createElement('li');
+          li.className = 'svg-item';
           li.dataset.id = item.id;
           if (item.id === selectedId) li.classList.add('selected');
-          li.innerHTML = `SVG ${index + 1} <button class="moveBtn" data-id="${item.id}">Move</button> <button class="scaleBtn" data-id="${item.id}">Scale</button> <button class="deleteBtn" data-id="${item.id}">Delete</button>`;
+          li.innerHTML = `
+            SVG ${index+1}
+            <button class="moveBtn" data-id="${item.id}">Move</button>
+            <input type="range" class="scale-slider" data-id="${item.id}" min="10" max="200" value="${item.scalePercent*100}" />
+            <span class="scale-value" data-id="${item.id}">${Math.round(item.scalePercent*100)}%</span>
+            <button class="deleteBtn" data-id="${item.id}">Delete</button>
+          `;
           svgList.appendChild(li);
         });
       }
 
       function selectImage(id) {
-        selectedId = id;
-        updateList();
-        redrawAll();
+        selectedId = id; updateList(); redrawAll();
       }
+
+      svgList.addEventListener('input', e => {
+        if (e.target.matches('.scale-slider')) {
+          const id = e.target.dataset.id;
+          const value = parseFloat(e.target.value);
+          const item = images.find(i => i.id === id);
+          item.scalePercent = value / 100;
+          document.querySelector(`.scale-value[data-id=\"${id}\"]`).textContent = `${value}%`;
+          redrawAll();
+        }
+      });
 
       svgList.addEventListener('click', e => {
         const id = e.target.dataset.id;
@@ -112,12 +134,6 @@
           images.splice(images.findIndex(i => i.id === id), 1);
           selectedId = images[0]?.id || null;
           updateList(); redrawAll(); return;
-        }
-        if (e.target.matches('.scaleBtn')) {
-          const item = images.find(i => i.id === id);
-          const val = prompt('Enter scale percent', Math.round(item.scalePercent * 100));
-          if (val !== null) { item.scalePercent = parseFloat(val) / 100; redrawAll(); }
-          return;
         }
         if (e.target.matches('.moveBtn')) {
           selectImage(id); return;
@@ -130,87 +146,41 @@
       toggleOrient.addEventListener('click', () => {
         [widthInput.value, heightInput.value] = [heightInput.value, widthInput.value];
         toggleOrient.textContent = toggleOrient.textContent.includes('Landscape') ? 'Switch to Portrait' : 'Switch to Landscape';
-        const wIn = parseFloat(widthInput.value);
-        const hIn = parseFloat(heightInput.value);
-        const wPx = Math.round(wIn * DPI);
-        const hPx = Math.round(hIn * DPI);
+        const wIn = parseFloat(widthInput.value), hIn = parseFloat(heightInput.value);
+        const wPx = Math.round(wIn * DPI), hPx = Math.round(hIn * DPI);
         images.forEach(item => {
-          item.fitScale = Math.min(wPx / item.origW, hPx / item.origH);
+          item.fitScale = Math.min(wPx/item.origW, hPx/item.origH);
           const drawW = item.origW * item.fitScale * item.scalePercent;
           const drawH = item.origH * item.fitScale * item.scalePercent;
-          item.x = borderPx + (wPx - drawW) / 2;
-          item.y = borderPx + (hPx - drawH) / 2;
-        });
-        redrawAll();
+          item.x = borderPx + (wPx - drawW)/2;
+          item.y = borderPx + (hPx - drawH)/2;
+        }); redrawAll();
       });
 
-      // drag logic only via move handle
       canvas.addEventListener('mousedown', e => {
+        if (!selectedId) return;
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const item = images.find(i => i.id === selectedId);
-        if (item) {
-          const hx = item.x - handleSize/2;
-          const hy = item.y - handleSize/2;
-          if (x >= hx && x <= hx + handleSize && y >= hy && y <= hy + handleSize) {
-            dragging = true;
-            dragOffset = { x: x - item.x, y: y - item.y };
-          }
+        const x = e.clientX - rect.left, y = e.clientY - rect.top;
+        const dx = x - handleCenter.x, dy = y - handleCenter.y;
+        if (Math.hypot(dx, dy) <= 8) {
+          dragging = true;
+          const item = images.find(i => i.id === selectedId);
+          dragOffset.x = x - item.x;
+          dragOffset.y = y - item.y;
+          canvas.style.cursor = 'grabbing';
         }
       });
       canvas.addEventListener('mousemove', e => {
         if (dragging) {
           const rect = canvas.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
+          const x = e.clientX - rect.left, y = e.clientY - rect.top;
           const item = images.find(i => i.id === selectedId);
-          if (item) {
-            item.x = x - dragOffset.x;
-            item.y = y - dragOffset.y;
-            redrawAll();
-          }
+          item.x = x - dragOffset.x;
+          item.y = y - dragOffset.y;
+          redrawAll();
         }
       });
-      ['mouseup', 'mouseleave'].forEach(ev => canvas.addEventListener(ev, () => { dragging = false; }));
+      ['mouseup','mouseleave'].forEach(ev => canvas.addEventListener(ev, () => { dragging = false; canvas.style.cursor = 'default'; }));
 
-      fileInput.addEventListener('change', e => {
-        const files = Array.from(e.target.files);
-        const wIn = parseFloat(widthInput.value);
-        const hIn = parseFloat(heightInput.value);
-        if (!(wIn > 0 && hIn > 0)) return;
-        const wPx = Math.round(wIn * DPI);
-        const hPx = Math.round(hIn * DPI);
-        files.forEach(file => {
-          const reader = new FileReader();
-          reader.onload = evt => {
-            const svgText = evt.target.result;
-            const doc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
-            const svgEl = doc.documentElement;
-            let origW = parseFloat(svgEl.getAttribute('width')) || parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
-            let origH = parseFloat(svgEl.getAttribute('height')) || parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
-            const fitScale = Math.min(wPx / origW, hPx / origH);
-            const id = Date.now() + '_' + Math.random();
-            const blob = new Blob([svgText], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const img = new Image();
-            img.onload = () => {
-              URL.revokeObjectURL(url);
-              const drawW = origW * fitScale;
-              const drawH = origH * fitScale;
-              const x = borderPx + (wPx - drawW) / 2;
-              const y = borderPx + (hPx - drawH) / 2;
-              images.push({ id, svgText, image: img, origW, origH, fitScale, scalePercent: 1, x, y });
-              selectImage(id);
-              updateList();
-              redrawAll();
-            };
-            img.src = url;
-          };
-          reader.readAsText(file);
-        });
-      });
-    });
-  </script>
-</body>
-</html>
+      exportBtn.addEventListener('click', () => {
+        const link
