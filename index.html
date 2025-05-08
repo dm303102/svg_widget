@@ -1,20 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Widget Demo</title>
-  <link rel="stylesheet" href="widget.css">
+  <meta charset="UTF-8">
+  <title>SVG Preview</title>
+  <style>
+    /* simple styling */
+    #preview {
+      border: 1px solid #ccc;
+      max-width: 100%;
+      margin-top: 1em;
+    }
+  </style>
 </head>
 <body>
-  <h1>My Widget Demo</h1>
-  <!-- container where your widget will go -->
-  <div id="widget-container"></div>
-  
-  <script src="widget.js"></script>
+  <h1>Upload & Preview your SVG</h1>
+  <input type="file" id="fileInput" accept=".svg" />
+  <p id="dimensions">Width: — Height: —</p>
+  <div id="preview"></div>
+
   <script>
-    // initialize your widget, e.g.:
-    MyWidget.init('#widget-container', { color: 'teal' });
+    document.getElementById('fileInput')
+      .addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const svgText = evt.target.result;
+          const parser = new DOMParser();
+          const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+          const svgEl = svgDoc.documentElement;
+
+          // read width/height attributes, or fallback to viewBox
+          let w = svgEl.getAttribute('width');
+          let h = svgEl.getAttribute('height');
+          if (!w || !h) {
+            const vb = svgEl.getAttribute('viewBox');
+            if (vb) {
+              const parts = vb.split(' ');
+              w = parts[2];
+              h = parts[3];
+            }
+          }
+
+          document.getElementById('dimensions')
+            .textContent = `Width: ${w}px Height: ${h}px`;
+
+          // inject the raw SVG for live preview
+          document.getElementById('preview').innerHTML = svgText;
+        };
+        reader.readAsText(file);
+      });
   </script>
 </body>
 </html>
