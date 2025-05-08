@@ -22,6 +22,19 @@
   <!-- file input -->
   <input type="file" id="fileInput" accept=".svg" />
 
+  <input type="file" id="fileInput" accept=".svg" />
+
+<!-- NEW: width/height controls -->
+<label>
+  Width (px):
+  <input type="number" id="widthInput" placeholder="e.g. 500" />
+</label>
+<label>
+  Height (px):
+  <input type="number" id="heightInput" placeholder="e.g. 300" />
+</label>
+<button id="renderBtn">Generate Static Preview</button>
+
   <!-- placeholders for JS to fill -->
   <p id="dimensions">Width: — Height: —</p>
   <div id="preview"></div>
