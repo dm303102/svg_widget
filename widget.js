@@ -4,12 +4,17 @@ function svgTextToPngDataUrl(svgText, w, h, callback) {
   const blob = new Blob([svgText], { type: 'image/svg+xml' });
   const url  = URL.createObjectURL(blob);
 
+  // parse ?width=500&height=300 from the URL
+  const params = new URLSearchParams(window.location.search);
+  const forcedW = parseInt(params.get('width'));
+  const forcedH = parseInt(params.get('height'));
+  
   const img = new Image();
   img.onload = () => {
     // draw into canvas at the requested size:
     const canvas = document.createElement('canvas');
-    canvas.width  = w;
-    canvas.height = h;
+    canvas.width  = forcedW;
+    canvas.height = forcedH;
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0, w, h);
 
