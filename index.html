@@ -8,32 +8,20 @@
   <style>
     .controls label { flex: 1 1 120px; white-space: nowrap; }
     canvas { cursor: default; }
-    #svgList input[type="range"] { width: 100px; vertical-align: middle; margin: 0 0.5em; }
-    #svgList li { display: flex; align-items: center; justify-content: space-between; }
+    #svgList li { display: flex; align-items: center; justify-content: space-between; padding: 0.3em; }
     #svgList .item-controls { display: flex; align-items: center; gap: 0.5em; }
+    #svgList input[type="range"] { width: 100px; vertical-align: middle; }
   </style>
 </head>
 <body>
   <h1>Upload &amp; Preview Your SVGs</h1>
 
   <div class="controls">
-    <label>
-      Length:
-      <select id="lengthSelect">
-        <option value="">–</option>
-      </select>
-    </label>
-    <label>
-      Width:
-      <select id="widthSelect" disabled>
-        <option value="">–</option>
-      </select>
-    </label>
-    <span id="priceDisplay"></span>
+    <label>Canvas Width (in): <input type="number" id="widthInput" step="any" placeholder="3.5" /></label>
+    <label>Canvas Height (in): <input type="number" id="heightInput" step="any" placeholder="2" /></label>
     <button id="renderBtn">Render Canvas</button>
     <button id="toggleOrientation">Switch to Landscape</button>
-    <button id="exportBtn">Export Canvas</button>
-    <button id="exportSvgBtn">Export as SVG</button>
+    <button id="exportBtn">Export (SVG)</button>
   </div>
 
   <div id="fileInputContainer" style="display:none; margin-top:1em;">
@@ -54,158 +42,23 @@
       const borderPx = 4;
 
       // DOM refs
-          const variants = [
-      { length: 4, width: 4, price: 12.00 },
-      { length: 4, width: 6, price: 14.00 },
-      { length: 4, width: 8, price: 16.00 },
-      { length: 4, width: 10, price: 18.00 },
-      { length: 4, width: 12, price: 20.00 },
-      { length: 6, width: 6, price: 15.00 },
-      { length: 6, width: 8, price: 17.00 },
-      { length: 6, width: 10, price: 19.00 },
-      { length: 6, width: 12, price: 21.00 },
-      { length: 8, width: 8, price: 19.00 },
-      { length: 8, width: 10, price: 21.00 },
-      { length: 8, width: 12, price: 23.00 },
-      { length: 10, width: 10, price: 22.00 },
-      { length: 10, width: 12, price: 24.00 },
-      { length: 12, width: 12, price: 28.00 },
-      { length: 14, width: 4, price: 22.00 },
-      { length: 14, width: 6, price: 24.00 },
-      { length: 14, width: 8, price: 26.00 },
-      { length: 14, width: 10, price: 28.00 },
-      { length: 14, width: 12, price: 30.00 },
-      { length: 16, width: 4, price: 24.00 },
-      { length: 16, width: 6, price: 25.00 },
-      { length: 16, width: 8, price: 27.00 },
-      { length: 16, width: 10, price: 29.00 },
-      { length: 16, width: 12, price: 31.00 },
-      { length: 18, width: 4, price: 26.00 },
-      { length: 18, width: 6, price: 28.00 },
-      { length: 18, width: 8, price: 30.00 },
-      { length: 18, width: 10, price: 32.00 },
-      { length: 18, width: 12, price: 34.00 },
-      { length: 20, width: 4, price: 28.00 },
-      { length: 20, width: 6, price: 30.00 },
-      { length: 20, width: 8, price: 32.00 },
-      { length: 20, width: 10, price: 34.00 },
-      { length: 20, width: 12, price: 36.00 },
-      { length: 22, width: 4, price: 30.00 },
-      { length: 22, width: 6, price: 32.00 },
-      { length: 22, width: 8, price: 34.00 },
-      { length: 22, width: 10, price: 36.00 },
-      { length: 22, width: 12, price: 38.00 },
-      { length: 24, width: 4, price: 30.00 },
-      { length: 24, width: 6, price: 32.00 },
-      { length: 24, width: 8, price: 34.00 },
-      { length: 24, width: 10, price: 36.00 },
-      { length: 24, width: 12, price: 38.00 },
-      { length: 26, width: 4, price: 32.00 },
-      { length: 26, width: 6, price: 34.00 },
-      { length: 26, width: 8, price: 36.00 },
-      { length: 26, width: 10, price: 38.00 },
-      { length: 26, width: 12, price: 40.00 },
-      { length: 28, width: 4, price: 34.00 },
-      { length: 28, width: 6, price: 36.00 },
-      { length: 28, width: 8, price: 38.00 },
-      { length: 28, width: 10, price: 40.00 },
-      { length: 28, width: 12, price: 42.00 },
-      { length: 30, width: 4, price: 36.00 },
-      { length: 30, width: 6, price: 38.00 },
-      { length: 30, width: 8, price: 40.00 },
-      { length: 30, width: 10, price: 42.00 },
-      { length: 30, width: 12, price: 44.00 },
-      { length: 32, width: 4, price: 38.00 },
-      { length: 32, width: 6, price: 40.00 },
-      { length: 32, width: 8, price: 42.00 },
-      { length: 32, width: 10, price: 44.00 },
-      { length: 32, width: 12, price: 46.00 },
-      { length: 34, width: 4, price: 40.00 },
-      { length: 34, width: 6, price: 42.00 },
-      { length: 34, width: 8, price: 44.00 },
-      { length: 34, width: 10, price: 46.00 },
-      { length: 34, width: 12, price: 48.00 },
-      { length: 36, width: 4, price: 42.00 },
-      { length: 36, width: 6, price: 44.00 },
-      { length: 36, width: 8, price: 46.00 },
-      { length: 36, width: 10, price: 48.00 },
-      { length: 36, width: 12, price: 50.00 },
-    ];
-
-     // const widthInput = document.getElementById('widthInput');
-     // const heightInput = document.getElementById('heightInput');
+      const widthInput = document.getElementById('widthInput');
+      const heightInput = document.getElementById('heightInput');
       const renderBtn = document.getElementById('renderBtn');
       const toggleOrient = document.getElementById('toggleOrientation');
       const exportBtn = document.getElementById('exportBtn');
-      const exportSvgBtn = document.getElementById('exportSvgBtn');
       const fileInputContainer = document.getElementById('fileInputContainer');
       const fileInput = document.getElementById('fileInput');
       const svgList = document.getElementById('svgList');
       const canvas = document.getElementById('mainCanvas');
       const ctx = canvas.getContext('2d');
 
-          // === 2) Populate selects ===
-    const lenSel = document.getElementById('lengthSelect');
-    const widSel = document.getElementById('widthSelect');
-    const priceDisplay = document.getElementById('priceDisplay');
-
-    function initSelectors() {
-      // unique lengths
-      const lengths = [...new Set(variants.map(v=>v.length))].sort((a,b)=>a-b);
-      lengths.forEach(l=>{
-        const o = document.createElement('option');
-        o.value = l;
-        o.textContent = `${l}"`;
-        lenSel.appendChild(o);
-      });
-      lenSel.addEventListener('change', onLengthChange);
-      widSel.addEventListener('change', updatePriceAndCanvas);
-    }
-
-    function onLengthChange() {
-      widSel.innerHTML = '<option value="">–</option>';
-      priceDisplay.textContent = '';
-      const L = parseInt(lenSel.value);
-      if (!L) { widSel.disabled = true; return; }
-      widSel.disabled = false;
-      // widths for that length
-      const widths = variants
-        .filter(v=>v.length===L)
-        .map(v=>v.width)
-        .sort((a,b)=>a-b);
-      widths.forEach(w=>{
-        const o = document.createElement('option');
-        o.value = w;
-        o.textContent = `${w}"`;
-        widSel.appendChild(o);
-      });
-    }
-
-    function updatePriceAndCanvas() {
-      const L = parseInt(lenSel.value),
-            W = parseInt(widSel.value);
-      const variant = variants.find(v=>v.length===L && v.width===W);
-      priceDisplay.textContent = variant
-        ? `Price: $${variant.price.toFixed(2)}`
-        : '';
-      // now that you have L & W, you can:
-      //  • show the file-input
-      //  • call your redrawAll() but using L,W instead of number inputs
-      if (variant) {
-        document.getElementById('fileInputContainer').style.display = 'block';
-        // e.g. redrawAll(L, W);
-      }
-    }
-
-    // kick it off
-    initSelectors();
-  });
-    
       function redrawAll() {
         const wIn = parseFloat(widthInput.value);
         const hIn = parseFloat(heightInput.value);
         if (!(wIn > 0 && hIn > 0)) {
-          fileInputContainer.style.display = 'none'; return;
+          fileInputContainer.style.display = 'none';
+          return;
         }
         fileInputContainer.style.display = 'block';
         const wPx = Math.round(wIn * DPI);
@@ -223,22 +76,24 @@
         ctx.textAlign = 'left'; ctx.fillText(`W: ${wIn}\"`, borderPx + 4, canvas.height - 4);
         ctx.textAlign = 'right'; ctx.fillText(`H: ${hIn}\"`, canvas.width - borderPx - 4, canvas.height - 4);
 
-        // draw images and selection handle
+        // draw images
         images.forEach(item => {
           const drawW = item.origW * item.fitScale * item.scalePercent;
           const drawH = item.origH * item.fitScale * item.scalePercent;
           ctx.drawImage(item.image, item.x, item.y, drawW, drawH);
         });
 
+        // draw selection handle
         if (selectedId) {
           const item = images.find(i => i.id === selectedId);
           const drawW = item.origW * item.fitScale * item.scalePercent;
           const drawH = item.origH * item.fitScale * item.scalePercent;
+          // border
           ctx.lineWidth = 2; ctx.strokeStyle = 'red';
           ctx.strokeRect(item.x, item.y, drawW, drawH);
-          // move handle at top-center
+          // handle above
           handleCenter.x = item.x + drawW / 2;
-          handleCenter.y = item.y - 15;
+          handleCenter.y = item.y - 12;
           ctx.beginPath(); ctx.arc(handleCenter.x, handleCenter.y, 6, 0, 2 * Math.PI);
           ctx.fillStyle = '#3498db'; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
         }
@@ -250,14 +105,13 @@
           const li = document.createElement('li');
           li.dataset.id = item.id;
           if (item.id === selectedId) li.classList.add('selected');
-          // per-item controls including slider
+          // slider and delete
           const controls = document.createElement('div'); controls.className = 'item-controls';
-          const moveBtn = document.createElement('button'); moveBtn.textContent = 'Move'; moveBtn.className = 'moveBtn'; moveBtn.dataset.id = item.id;
           const slider = document.createElement('input');
           slider.type = 'range'; slider.min = 10; slider.max = 200; slider.value = Math.round(item.scalePercent * 100);
-          slider.className = 'scaleSliderItem'; slider.dataset.id = item.id;
-          const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Delete'; deleteBtn.className = 'deleteBtn'; deleteBtn.dataset.id = item.id;
-          controls.append(moveBtn, slider, deleteBtn);
+          slider.dataset.id = item.id;
+          const deleteBtn = document.createElement('button'); deleteBtn.textContent = 'Delete'; deleteBtn.dataset.id = item.id;
+          controls.append(slider, deleteBtn);
           li.textContent = `SVG ${index + 1}`;
           li.appendChild(controls);
           svgList.appendChild(li);
@@ -270,16 +124,17 @@
 
       svgList.addEventListener('click', e => {
         const id = e.target.dataset.id;
-        if (e.target.matches('.deleteBtn')) {
-          images.splice(images.findIndex(i => i.id === id), 1);
-          selectedId = images[0]?.id || null;
-          updateList(); redrawAll(); return;
+        if (e.target.matches('button')) {
+          if (e.target.textContent === 'Delete') {
+            images.splice(images.findIndex(i => i.id === id), 1);
+            selectedId = images[0]?.id || null;
+            updateList(); redrawAll();
+          }
         }
-        if (e.target.matches('.moveBtn')) { selectImage(id); return; }
       });
 
       svgList.addEventListener('input', e => {
-        if (e.target.matches('.scaleSliderItem')) {
+        if (e.target.matches('input[type=range]')) {
           const id = e.target.dataset.id;
           const item = images.find(i => i.id === id);
           item.scalePercent = parseInt(e.target.value, 10) / 100;
@@ -287,34 +142,15 @@
         }
       });
 
-      renderBtn.addEventListener('click', redrawAll);
-
-      toggleOrient.addEventListener('click', () => {
-        [widthInput.value, heightInput.value] = [heightInput.value, widthInput.value];
-        toggleOrient.textContent = toggleOrient.textContent.includes('Landscape')
-          ? 'Switch to Portrait' : 'Switch to Landscape';
-        const wIn = parseFloat(widthInput.value), hIn = parseFloat(heightInput.value);
-        const wPx = Math.round(wIn * DPI), hPx = Math.round(hIn * DPI);
-        images.forEach(item => {
-          item.fitScale = Math.min(wPx / item.origW, hPx / item.origH);
-          const drawW = item.origW * item.fitScale * item.scalePercent;
-          const drawH = item.origH * item.fitScale * item.scalePercent;
-          item.x = borderPx + (wPx - drawW) / 2;
-          item.y = borderPx + (hPx - drawH) / 2;
-        }); redrawAll();
-      });
-
+      // drag via handle
       canvas.addEventListener('mousedown', e => {
         if (!selectedId) return;
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left, y = e.clientY - rect.top;
-        // only drag via handle
         const dx = x - handleCenter.x, dy = y - handleCenter.y;
-        if (Math.hypot(dx, dy) <= 6) {
+        if (dx*dx + dy*dy <= 6*6) {
           dragging = true;
           const item = images.find(i => i.id === selectedId);
-          const drawW = item.origW * item.fitScale * item.scalePercent;
-          const drawH = item.origH * item.fitScale * item.scalePercent;
           dragOffset.x = x - item.x;
           dragOffset.y = y - item.y;
           canvas.style.cursor = 'grabbing';
@@ -333,12 +169,6 @@
       ['mouseup','mouseleave'].forEach(ev => canvas.addEventListener(ev, () => { dragging = false; canvas.style.cursor = 'default'; }));
 
       exportBtn.addEventListener('click', () => {
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = 'canvas-export.png'; link.click();
-      });
-
-      exportSvgBtn.addEventListener('click', () => {
         const wIn = parseFloat(widthInput.value), hIn = parseFloat(heightInput.value);
         const wPx = Math.round(wIn * DPI), hPx = Math.round(hIn * DPI);
         const xmlns = 'http://www.w3.org/2000/svg';
