@@ -135,6 +135,7 @@
     const priceDisplay = document.getElementById('priceDisplay');
     const renderBtn = document.getElementById('renderBtn');
     const toggleBtn = document.getElementById('toggleOrientation');
+    const undoBtn   = document.getElementById('undoBtn');
     const exportBtn = document.getElementById('exportBtn');
     const fileInputContainer = document.getElementById('fileInputContainer');
     const fileInput = document.getElementById('fileInput');
@@ -146,7 +147,23 @@
     let dragging = false, cropping = false;
     let cropStart = {}, dragOffset = {x:0,y:0};
     const DPI=96, borderPx=4;
+    const history = [];
 
+  function pushHistory() {
+    history.push(JSON.parse(JSON.stringify(images)));
+    if (history.length > 50) history.shift();
+    }
+    
+  function undo() {
+    if (!history.length) return;
+    images = history.pop();
+    selectedId = images[0]?.id || null;
+    updateList();
+    redrawCanvas();
+    }
+    <button id="undoBtn">Undo</button>
+    document.getElementById('undoBtn').addEventListener('click', undo);
+                            
     function initSelectors(){
       const valid = variants.filter(v=>v.price!=null);
       const lengths = [...new Set(valid.map(v=>v.length))].sort((a,b)=>a-b);
@@ -209,90 +226,92 @@
     fileInputContainer.style.display = v ? 'block' : 'none';
   }
 
-    function redrawCanvas(){
+       function redrawCanvas() {
       const L=+lenSel.value, W=+widSel.value;
-      if(!(L&&W)){ fileInputContainer.style.display='none'; return; }
-      const wPx=L*DPI, hPx=W*DPI;
-      canvas.width=wPx+borderPx*2; canvas.height=hPx+borderPx*2;
+      if (!(L&&W)) { fileInputContainer.style.display='none'; return; }
+      const wPx = L*DPI, hPx = W*DPI;
+      canvas.width = wPx+2*borderPx;
+      canvas.height= hPx+2*borderPx;
 
+      // background & border
       ctx.clearRect(0,0,canvas.width,canvas.height);
       ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
       ctx.lineWidth=borderPx; ctx.strokeStyle='#000';
       ctx.strokeRect(borderPx/2,borderPx/2,wPx+borderPx,hPx+borderPx);
 
+      // size text
       ctx.fillStyle='#000'; ctx.font='16px sans-serif';
       ctx.textAlign='left'; ctx.fillText(`L: ${L}"`,borderPx+4,canvas.height-4);
-      ctx.textAlign='right'; ctx.fillText(`W: ${W}"`,canvas.width-borderPx-4,canvas.height-4);
+      ctx.textAlign='right';ctx.fillText(`W: ${W}"`,canvas.width-borderPx-4,canvas.height-4);
 
-      // draw each image (with any rotation already applied)
-      images.forEach(it=>{
+      // draw each svg
+      images.forEach(it => {
+        const dW = it.origW * it.fitScale * it.scalePercent;
+        const dH = it.origH * it.fitScale * it.scalePercent;
+        const cx = it.x + dW/2, cy = it.y + dH/2;
+
         ctx.save();
-        // move to image center, rotate, then draw
-        const dW=it.origW*it.fitScale*it.scalePercent,
-              dH=it.origH*it.fitScale*it.scalePercent;
-        ctx.translate(it.x + dW/2, it.y + dH/2);
-        ctx.rotate((it.angle||0) * Math.PI/180);
-        ctx.drawImage(it.image, -dW/2, -dH/2, dW, dH);
+          ctx.translate(cx, cy);
+          ctx.rotate(it.rotation||0);
+          if (it.crop) {
+            ctx.beginPath();
+            ctx.rect(-dW/2 + it.crop.x, -dH/2 + it.crop.y, it.crop.w, it.crop.h);
+            ctx.clip();
+          }
+          ctx.drawImage(it.image, -dW/2, -dH/2, dW, dH);
         ctx.restore();
 
-        if(it.id===selectedId){
-          // red border
-          ctx.lineWidth=2; ctx.strokeStyle='red';
-          ctx.strokeRect(it.x, it.y, dW, dH);
+        if (it.id === selectedId) {
+          ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(it.rotation||0);
+            ctx.strokeStyle = 'red'; ctx.lineWidth = 2;
+            ctx.strokeRect(-dW/2, -dH/2, dW, dH);
+          ctx.restore();
         }
       });
 
-      // if we're mid-crop, draw blue outline
-      if(cropping && cropStart.startX!=null){
+      // draw crop outline if active
+      if (cropping && cropStart.startX!=null) {
         const x0 = cropStart.startX,
               y0 = cropStart.startY,
               w0 = cropStart.curX - x0,
               h0 = cropStart.curY - y0;
         ctx.save();
-        ctx.strokeStyle = 'blue';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6,4]);
-        ctx.strokeRect(x0, y0, w0, h0);
+          ctx.strokeStyle = 'blue'; ctx.lineWidth = 2;
+          ctx.setLineDash([6,4]);
+          ctx.strokeRect(x0, y0, w0, h0);
         ctx.restore();
       }
     }
 
-    function updateList(){
+    function updateList() {
       svgList.innerHTML='';
-      images.forEach((it,i)=>{
-        const li=document.createElement('li');
-        li.dataset.id=it.id;
-        if(it.id===selectedId) li.classList.add('selected');
-
-        const name=document.createElement('span');
-        name.className='filename';
+      images.forEach((it,i) => {
+        const li = document.createElement('li'); li.dataset.id = it.id;
+        if (it.id===selectedId) li.classList.add('selected');
+        const name = document.createElement('span'); name.className='filename';
         name.textContent = it.filename||`SVG ${i+1}`;
+        const ctr = document.createElement('div'); ctr.className='item-controls';
 
-        const ctr=document.createElement('div');
-        ctr.className='item-controls';
-
-        const sl=document.createElement('input');
+        const sl = document.createElement('input');
         sl.type='range'; sl.min=10; sl.max=200; sl.step=0.1;
         sl.value=(it.scalePercent*100).toFixed(1);
-        sl.dataset.id=it.id;
+        sl.dataset.id = it.id;
 
-        const cropBtn=document.createElement('button');
+        const cropBtn = document.createElement('button');
         cropBtn.textContent='Crop'; cropBtn.dataset.id=it.id;
-
-        const dupBtn=document.createElement('button');
+        const dupBtn  = document.createElement('button');
         dupBtn.textContent='Duplicate'; dupBtn.dataset.id=it.id;
-
-        const rotBtn=document.createElement('button');
-        rotBtn.textContent='Rotate'; rotBtn.dataset.id=it.id;
-
-        const undoBtn=document.createElement('button');
-        undoBtn.textContent='Undo'; undoBtn.dataset.id=it.id;
-
-        const delBtn=document.createElement('button');
+        const rotL    = document.createElement('button');
+        rotL.textContent='↺'; rotL.dataset.id=it.id;
+        const rotR    = document.createElement('button');
+        rotR.textContent='↻'; rotR.dataset.id=it.id;
+        const delBtn  = document.createElement('button');
         delBtn.textContent='Delete'; delBtn.dataset.id=it.id;
 
-        ctr.append(sl,cropBtn,dupBtn,rotBtn,undoBtn,delBtn);
-        li.append(name,ctr);
+        ctr.append(sl, cropBtn, dupBtn, rotL, rotR, delBtn);
+        li.append(name, ctr);
         svgList.append(li);
       });
     }
@@ -323,8 +342,14 @@
           images.push(clone);
           selectImage(clone.id);
           break;
-        case 'Rotate':
-          it.angle = ((it.angle||0) + 90) % 360;
+        case '↺':
+          pushHistory();
+          it.rotation = (it.rotation||0) - Math.PI/180;
+          selectImage(id);
+          break;
+        case '↻' :
+          pushHistory();
+          it.rotation = (it.rotation||0) + Math.PI/180;
           selectImage(id);
           break;
         case 'Undo':
@@ -428,6 +453,42 @@
           redrawCanvas();
         }
         dragging=false;
+        // at the end of your mouseup handler, when finishing crop...
+pushHistory();
+const it = images.find(i => i.id === selectedId);
+
+// calculate source crop in image‐space
+const sx = it.crop.x, sy = it.crop.y,
+      sw = it.crop.w, sh = it.crop.h;
+
+// make a temp canvas
+const tmp = document.createElement('canvas');
+tmp.width = sw; tmp.height = sh;
+const tctx = tmp.getContext('2d');
+
+// draw only the cropped part
+tctx.drawImage(
+  it.image,
+  sx, sy, sw, sh,  // source
+  0,  0, sw, sh   // destination
+);
+
+// replace image
+const newImg = new Image();
+newImg.onload = () => {
+  it.image = newImg;
+  it.origW = sw;
+  it.origH = sh;
+  delete it.crop;
+  // recompute fitScale & reset position if you like:
+  const L = parseInt(lenSel.value,10)*DPI,
+        W = parseInt(widSel.value,10)*DPI;
+  it.fitScale = Math.min(L/it.origW, W/it.origH);
+  it.x = borderPx + (L - it.origW*it.fitScale*it.scalePercent)/2;
+  it.y = borderPx + (W - it.origH*it.fitScale*it.scalePercent)/2;
+  redrawCanvas();
+};
+newImg.src = tmp.toDataURL();
       });
     });
 
