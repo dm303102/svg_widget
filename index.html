@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const li = document.createElement('li');
       li.dataset.id = it.id;
       if (it.id === selectedId) li.classList.add('selected');
-      li.textContent = '';
+      li.innerHTML  = '';
 
       const name = document.createElement('span');
       name.className = 'filename';
