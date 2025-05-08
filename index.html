@@ -14,7 +14,7 @@
     #svgList li.selected { background: #def; }
     #svgList li:hover { background: #f0f8ff; }
     #svgList .filename { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 0.5em; }
-    #svgList .item-controls { display: flex; align-items: center; gap: 0.5em; }
+    #svgList .item-controls { display: flex; align-items: center; gap: 0.5em; 
     #svgList input[type="range"] { width: 80px; }
 
   </style>
@@ -255,13 +255,33 @@ document.addEventListener('DOMContentLoaded', () => {    // Full Etsy variants l
   });
 
   canvas.addEventListener('mousedown',e=>{
-    if(!selectedId) return;
-    const r=canvas.getBoundingClientRect();
-    const x=e.clientX-r.left, y=e.clientY-r.top;
-    const dx=x-handleCenter.x, dy=y-handleCenter.y;
-    if(dx*dx+dy*dy<=100){ dragging=true;
-      const it=images.find(i=>i.id===selectedId);
-      dragOffset={x:x-it.x,y:y-it.y}; canvas.style.cursor='grabbing';
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  // 1) If you click inside any SVG on the canvas, select that SVG:
+  // iterate in draw order so topmost wins:
+  for (let i = images.length - 1; i >= 0; i--) {
+    const it = images[i];
+    const dW = it.origW * it.fitScale * it.scalePercent;
+    const dH = it.origH * it.fitScale * it.scalePercent;
+    if (x >= it.x && x <= it.x + dW && y >= it.y && y <= it.y + dH) {
+      selectImage(it.id);
+      // now fall through to start dragging
+      break;
+    }
+  }
+
+  // 2) If something is selected, and you clicked inside it, start drag
+  if (!selectedId) return;
+  const it = images.find(i => i.id === selectedId);
+  const dW = it.origW * it.fitScale * it.scalePercent;
+  const dH = it.origH * it.fitScale * it.scalePercent;
+  if (x >= it.x && x <= it.x + dW && y >= it.y && y <= it.y + dH) {
+    dragging = true;
+    dragOffset.x = x - it.x;
+    dragOffset.y = y - it.y;
+    canvas.style.cursor = 'grabbing';
     }
   });
   canvas.addEventListener('mousemove',e=>{
