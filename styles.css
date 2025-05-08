@@ -37,6 +37,14 @@ h1 {
   font-size: 0.9rem;
 }
 
+.filename {
+  flex: 1;
+  min-width: 0;      /* ← allow it to shrink and show text */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Inputs & sliders */
 input[type="number"],
 input[type="range"] {
