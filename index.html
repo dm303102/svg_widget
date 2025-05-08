@@ -208,22 +208,37 @@ document.addEventListener('DOMContentLoaded', () => {    // Full Etsy variants l
     }
   }
 
-  function updateList(){
-    svgList.innerHTML='';
-    images.forEach((it,i)=>{
-      const li=document.createElement('li');li.dataset.id=it.id;
-      if(it.filename) li.textContent='';
-      const name=document.createElement('span');name.className='filename';
-      name.textContent=it.filename||`SVG ${i+1}`;
-      const ctr=document.createElement('div');ctr.className='item-controls';
-      const sl=document.createElement('input');sl.type='range';sl.min=10;sl.max=200;
-      sl.value=Math.round(it.scalePercent*100);sl.dataset.id=it.id;
-      const del=document.createElement('button');del.textContent='Delete';del.dataset.id=it.id;
-      ctr.append(sl,del);
-      li.append(name,ctr);
-      svgList.append(li);
-    });
-  }
+    function updateList() {
+      svgList.innerHTML = '';
+      images.forEach((it, i) => {
+        const li = document.createElement('li');
+        li.dataset.id = it.id;
+        if (it.id === selectedId) li.classList.add('selected');
+
+        // filename span
+        const name = document.createElement('span');
+        name.className = 'filename';
+        name.textContent = it.filename || `SVG ${i + 1}`;
+
+        // controls
+        const ctr = document.createElement('div');
+        ctr.className = 'item-controls';
+        const sl = document.createElement('input');
+        sl.type = 'range';
+        sl.min = 10;
+        sl.max = 200;
+        sl.step = 0.1;
+        sl.value = (it.scalePercent * 100).toFixed(1);
+        sl.dataset.id = it.id;
+        const del = document.createElement('button');
+        del.textContent = 'Delete';
+        del.dataset.id = it.id;
+        ctr.append(sl, del);
+
+        li.append(name, ctr);
+        svgList.append(li);
+      });
+    }
 
   function selectImage(id){ selectedId=id; updateList(); redrawCanvas(); }
 
