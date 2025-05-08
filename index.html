@@ -346,8 +346,14 @@
 
     renderBtn.addEventListener('click', redrawCanvas);
     toggleBtn.addEventListener('click',()=>{
+      const oldL = lenSel.value;
+      const oldW = widSel.value;
+      lenSel.value = oldW;
       [lenSel.value, widSel.value] = [widSel.value, lenSel.value];
-      onLengthChange(); onWidthChange();
+      
+      onLengthChange(); 
+      widSel.value = oldL;
+      onWidthChange();
       redrawCanvas();
       toggleBtn.textContent = toggleBtn.textContent.includes('Landscape')
         ? 'Switch to Portrait' : 'Switch to Landscape';
