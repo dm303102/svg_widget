@@ -14,9 +14,8 @@
     #svgList li.selected { background: #def; }
     #svgList li:hover { background: #f0f8ff; }
     #svgList .filename { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 0.5em; }
-    #svgList .item-controls { display: flex; align-items: center; gap: 0.5em; 
+    #svgList .item-controls { display: flex; align-items: center; gap: 0.5em; }
     #svgList input[type="range"] { width: 80px; }
-
   </style>
 </head>
 <body>
@@ -45,7 +44,7 @@
   <canvas id="mainCanvas"></canvas>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {    // Full Etsy variants list (85 entries)
+document.addEventListener('DOMContentLoaded', () => {
     const variants = [
       { length: 4, width: 4, price: 12.00 },
       { length: 4, width: 6, price: 14.00 },
@@ -134,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {    // Full Etsy variants l
       { length: 36, width: 12, price: 50.00 }
     ];
     
-      const lenSel = document.getElementById('lengthSelect');
+  const lenSel = document.getElementById('lengthSelect');
   const widSel = document.getElementById('widthSelect');
   const priceDisplay = document.getElementById('priceDisplay');
   const renderBtn = document.getElementById('renderBtn');
@@ -145,9 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {    // Full Etsy variants l
   const svgList = document.getElementById('svgList');
   const canvas = document.getElementById('mainCanvas');
   const ctx = canvas.getContext('2d');
+
   let images = [];
   let selectedId = null;
   let dragging = false;
+  let cropping = false;
+  let cropStart = {};
   let dragOffset = {x:0,y:0};
   let handleCenter = {x:0,y:0};
   const DPI = 96, borderPx = 4;
@@ -155,30 +157,26 @@ document.addEventListener('DOMContentLoaded', () => {    // Full Etsy variants l
   function initSelectors() {
     const valid = variants.filter(v=>v.price!=null);
     const lengths = [...new Set(valid.map(v=>v.length))].sort((a,b)=>a-b);
-    const widths  = [...new Set(valid.map(v=>v.width ))].sort((a,b)=>a-b);
-
     lenSel.innerHTML = '<option value="">–</option>';
-    lengths.forEach(l=>{ let o=document.createElement('option'); o.value=l; o.textContent=`${l}"`; lenSel.append(o);} );
+    lengths.forEach(l=>{ const o=document.createElement('option'); o.value=l; o.textContent=`${l}"`; lenSel.append(o); });
+    lenSel.disabled = false;
+    lenSel.addEventListener('change', updatePriceAndCanvas);
+  }
+
+  function updatePriceAndCanvas() {
+    const L = parseInt(lenSel.value,10);
+    const widths = variants.filter(v=>v.length===L && v.price!=null).map(v=>v.width).sort((a,b)=>a-b);
     widSel.innerHTML = '<option value="">–</option>';
-    widths.forEach(w=>{ let o=document.createElement('option'); o.value=w; o.textContent=`${w}"`; widSel.append(o);} );
-
-    lenSel.disabled=false;
-    widSel.disabled=false;
-    lenSel.addEventListener('change',updatePriceAndCanvas);
-    widSel.addEventListener('change',updatePriceAndCanvas);
+    widths.forEach(w=>{ const o=document.createElement('option'); o.value=w; o.textContent=`${w}"`; widSel.append(o); });
+    widSel.disabled = false;
+    const W = parseInt(widSel.value,10);
+    const v = variants.find(x=>x.length===L&&x.width===W&&x.price!=null);
+    priceDisplay.textContent = v?`Price: $${v.price.toFixed(2)}`:'';
+    fileInputContainer.style.display = v?'block':'none';
   }
 
-  function updatePriceAndCanvas(){
-    const L=parseInt(lenSel.value,10), W=parseInt(widSel.value,10);
-    const v=variants.find(x=>x.length===L&&x.width===W&&x.price!=null);
-    priceDisplay.textContent=v?`Price: $${v.price.toFixed(2)}`:'';
-    if(v) fileInputContainer.style.display='block';
-  }
-
-  initSelectors();
-
-  function redrawCanvas(){
-    const L=parseInt(lenSel.value),W=parseInt(widSel.value);
+  function redrawCanvas() {
+    const L=parseInt(lenSel.value,10),W=parseInt(widSel.value,10);
     if(!(L&&W)){ fileInputContainer.style.display='none'; return; }
     const wPx=L*DPI,hPx=W*DPI;
     canvas.width=wPx+borderPx*2; canvas.height=hPx+borderPx*2;
@@ -193,125 +191,83 @@ document.addEventListener('DOMContentLoaded', () => {    // Full Etsy variants l
     images.forEach(it=>{
       const dW=it.origW*it.fitScale*it.scalePercent;
       const dH=it.origH*it.fitScale*it.scalePercent;
+      if(it.crop){
+        ctx.save();ctx.beginPath();ctx.rect(it.x+it.crop.x,it.y+it.crop.y,it.crop.w,it.crop.h);ctx.clip();
+      }
       ctx.drawImage(it.image,it.x,it.y,dW,dH);
+      if(it.crop)ctx.restore();
+      if(it.id===selectedId){
+        ctx.lineWidth=2;ctx.strokeStyle='red';ctx.strokeRect(it.x,it.y,dW,dH);
+      }
     });
-
-    if(selectedId){
-      const it=images.find(i=>i.id===selectedId);
-      const dW=it.origW*it.fitScale*it.scalePercent;
-      const dH=it.origH*it.fitScale*it.scalePercent;
-      ctx.lineWidth=2;ctx.strokeStyle='red';ctx.strokeRect(it.x,it.y,dW,dH);
-      handleCenter.x=it.x+dW/2; handleCenter.y=it.y-16;
-      ctx.save();ctx.font='20px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-      ctx.fillStyle='#3498db';ctx.fillText('⇕',handleCenter.x,handleCenter.y);
-      ctx.restore();
-    }
   }
 
-    function updateList() {
-      svgList.innerHTML = '';
-      images.forEach((it, i) => {
-        const li = document.createElement('li');
-        li.dataset.id = it.id;
-        if (it.id === selectedId) li.classList.add('selected');
-
-        // filename span
-        const name = document.createElement('span');
-        name.className = 'filename';
-        name.textContent = it.filename || `SVG ${i + 1}`;
-
-        // controls
-        const ctr = document.createElement('div');
-        ctr.className = 'item-controls';
-        const sl = document.createElement('input');
-        sl.type = 'range';
-        sl.min = 10;
-        sl.max = 200;
-        sl.step = 0.1;
-        sl.value = (it.scalePercent * 100).toFixed(1);
-        sl.dataset.id = it.id;
-        const del = document.createElement('button');
-        del.textContent = 'Delete';
-        del.dataset.id = it.id;
-        ctr.append(sl, del);
-
-        li.append(name, ctr);
-        svgList.append(li);
-      });
-    }
+  function updateList(){
+    svgList.innerHTML='';
+    images.forEach((it,i)=>{
+      const li=document.createElement('li');li.dataset.id=it.id;
+      if(it.id===selectedId)li.classList.add('selected');
+      li.textContent='';
+      const name=document.createElement('span');name.className='filename';name.textContent=it.filename||`SVG ${i+1}`;
+      const ctr=document.createElement('div');ctr.className='item-controls';
+      const sl=document.createElement('input');sl.type='range';sl.min=10;sl.max=200;sl.step=0.1;sl.value=(it.scalePercent*100).toFixed(1);sl.dataset.id=it.id;
+      const cropBtn=document.createElement('button');cropBtn.textContent='Crop';cropBtn.dataset.id=it.id;
+      const dupBtn=document.createElement('button');dupBtn.textContent='Duplicate';dupBtn.dataset.id=it.id;
+      const delBtn=document.createElement('button');delBtn.textContent='Delete';delBtn.dataset.id=it.id;
+      ctr.append(sl,cropBtn,dupBtn,delBtn);
+      li.append(name,ctr);
+      svgList.append(li);
+    });
+  }
 
   function selectImage(id){ selectedId=id; updateList(); redrawCanvas(); }
 
   svgList.addEventListener('click',e=>{
-    const li=e.target.closest('li'); if(!li) return;
-    const id=li.dataset.id;
-    if(e.target.tagName==='BUTTON'){
-      images=images.filter(i=>i.id!==id);
-      selectedId=images[0]?.id||null;
-      updateList(); redrawCanvas();
+    const li=e.target.closest('li');if(!li)return; const id=li.dataset.id;
+    if(e.target.textContent==='Delete'){
+      images=images.filter(i=>i.id!==id); selectedId=images[0]?.id||null; updateList(); redrawCanvas();
+    } else if(e.target.textContent==='Crop'){
+      selectImage(id); cropping=true; cropStart={startX:null,startY:null,curX:null,curY:null};
+    } else if(e.target.textContent==='Duplicate'){
+      const orig=images.find(i=>i.id===id);
+      const clone={...orig, id:Date.now()+'_'+Math.random(), x:orig.x+10, y:orig.y+10};
+      if(orig.crop) clone.crop={...orig.crop};
+      images.push(clone); selectImage(clone.id);
     } else selectImage(id);
   });
 
   svgList.addEventListener('input',e=>{
     if(e.target.type==='range'){
       const it=images.find(i=>i.id===e.target.dataset.id);
-      it.scalePercent=e.target.value/100; selectImage(it.id);
+      it.scalePercent=parseFloat(e.target.value)/100; selectImage(it.id);
     }
   });
 
   renderBtn.addEventListener('click',redrawCanvas);
-
-  toggleBtn.addEventListener('click',()=>{
-    const l=lenSel.value, w=widSel.value;
-    lenSel.value=w; widSel.value=l;
-    updatePriceAndCanvas(); redrawCanvas();
-    toggleBtn.textContent = toggleBtn.textContent.includes('Landscape')
-      ? 'Switch to Portrait' : 'Switch to Landscape';
-  });
+  toggleBtn.addEventListener('click',()=>{[lenSel.value,widSel.value]=[widSel.value,lenSel.value]; updatePriceAndCanvas(); redrawCanvas(); toggleBtn.textContent=toggleBtn.textContent.includes('Landscape')?'Switch to Portrait':'Switch to Landscape';});
 
   canvas.addEventListener('mousedown',e=>{
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-
-  // 1) If you click inside any SVG on the canvas, select that SVG:
-  // iterate in draw order so topmost wins:
-  for (let i = images.length - 1; i >= 0; i--) {
-    const it = images[i];
-    const dW = it.origW * it.fitScale * it.scalePercent;
-    const dH = it.origH * it.fitScale * it.scalePercent;
-    if (x >= it.x && x <= it.x + dW && y >= it.y && y <= it.y + dH) {
-      selectImage(it.id);
-      // now fall through to start dragging
-      break;
-    }
-  }
-
-  // 2) If something is selected, and you clicked inside it, start drag
-  if (!selectedId) return;
-  const it = images.find(i => i.id === selectedId);
-  const dW = it.origW * it.fitScale * it.scalePercent;
-  const dH = it.origH * it.fitScale * it.scalePercent;
-  if (x >= it.x && x <= it.x + dW && y >= it.y && y <= it.y + dH) {
-    dragging = true;
-    dragOffset.x = x - it.x;
-    dragOffset.y = y - it.y;
-    canvas.style.cursor = 'grabbing';
-    }
+    const r=canvas.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top;
+    if(cropping){ cropStart.startX=x;cropStart.startY=y;cropStart.curX=x;cropStart.curY=y;canvas.style.cursor='crosshair';return;}
+    for(let i=images.length-1;i>=0;i--){const it=images[i];const dW=it.origW*it.fitScale*it.scalePercent;const dH=it.origH*it.fitScale*it.scalePercent;if(x>=it.x&&x<=it.x+dW&&y>=it.y&&y<=it.y+dH){selectImage(it.id);break;}}
+    if(!selectedId)return;
+    const it=images.find(i=>i.id===selectedId);
+    const dW=it.origW*it.fitScale*it.scalePercent; const dH=it.origH*it.fitScale*it.scalePercent;
+    if(x>=it.x&&x<=it.x+dW&&y>=it.y&&y<=it.y+dH){dragging=true; dragOffset={x:x-it.x,y:y-it.y}; canvas.style.cursor='grabbing';}
   });
+
   canvas.addEventListener('mousemove',e=>{
-    const r=canvas.getBoundingClientRect();
-    const x=e.clientX-r.left, y=e.clientY-r.top;
-    if(!dragging&&selectedId){
-      const dx=x-handleCenter.x, dy=y-handleCenter.y;
-      canvas.style.cursor=(dx*dx+dy*dy<=100)?'grab':'default';
-    }
-    if(dragging){
-      const it=images.find(i=>i.id===selectedId);
-      it.x=x-dragOffset.x; it.y=y-dragOffset.y; redrawCanvas();
-    }
+    const r=canvas.getBoundingClientRect(); const x=e.clientX-r.left,y=e.clientY-r.top;
+    if(cropping&&cropStart.startX!=null){cropStart.curX=x;cropStart.curY=y;redrawCanvas();return;}
+    if(!dragging&&selectedId){const it=images.find(i=>i.id===selectedId);const dW=it.origW*it.fitScale*it.scalePercent;const dH=it.origH*it.fitScale*it.scalePercent;canvas.style.cursor=(x>=it.x&&x<=it.x+dW&&y>=it.y&&y<=it.y+dH)?'grab':'default';}
+    if(dragging){const it=images.find(i=>i.id===selectedId);it.x=x-dragOffset.x;it.y=y-dragOffset.y;redrawCanvas();}
   });
-  ['mouseup','mouseleave'].forEach(ev=>canvas.addEventListener(ev,()=>{dragging=false;canvas.style.cursor='default';}));
+
+  ['mouseup','mouseleave'].forEach(ev=>canvas.addEventListener(ev,()=>{
+    if(cropping&&cropStart.startX!=null){const it=images.find(i=>i.id===selectedId);const x0=Math.min(cropStart.startX,cropStart.curX)-it.x;const y0=Math.min(cropStart.startY,cropStart.curY)-it.y;const w0=Math.abs(cropStart.curX-cropStart.startX);const h0=Math.abs(cropStart.curY-cropStart.startY);it.crop={x:x0,y:y0,w:w0,h:h0};cropping=false;redrawCanvas();}
+    dragging=false;canvas.style.cursor='default';
+  }));
+
   
     exportBtn.addEventListener('click',()=>{
       const L=parseInt(lenSel.value), W=parseInt(widSel.value);
