@@ -38,41 +38,7 @@
   <canvas id="mainCanvas"></canvas>
 
   <script>
-
-    function initLength() {
-  const lengths = Array.from(new Set(variants.map(v => v.length))).sort((a,b)=>a-b);
-  lengthSelect.innerHTML = '<option value="">–</option>';
-  lengths.forEach(l => {
-    const opt = document.createElement('option');
-    opt.value = l;
-    opt.textContent = `${l}"`;
-    lengthSelect.appendChild(opt);
-  });
-  lengthSelect.disabled = false;
-}
-
-function onLengthChange() {
-  const L = +lengthSelect.value;
-  widthSelect.innerHTML = '<option value="">–</option>';
-  widthSelect.disabled = !L;
-  if (L) {
-    const widths = variants
-      .filter(v => v.length === L)
-      .map(v => v.width)
-      .sort((a,b)=>a-b);
-    widths.forEach(w => {
-      const opt = document.createElement('option');
-      opt.value = w;
-      opt.textContent = `${w}"`;
-      widthSelect.appendChild(opt);
-    });
-  }
-  priceDisplay.textContent = '';
-  fileInputContainer.style.display = 'none';
-  redrawCanvas();
-}
-    
-  document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     const variants = [
       { length: 4, width: 4, price: 12.00 },
       { length: 4, width: 6, price: 14.00 },
@@ -177,7 +143,40 @@ function onLengthChange() {
     let images = [], selectedId = null, history = [];
     let dragging = false, cropping = false, dragOffset = { x: 0, y: 0 },
       cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
+      
+function initLength() {
+  const lengths = Array.from(new Set(variants.map(v => v.length))).sort((a,b)=>a-b);
+  lengthSelect.innerHTML = '<option value="">–</option>';
+  lengths.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l;
+    opt.textContent = `${l}"`;
+    lengthSelect.appendChild(opt);
+  });
+  lengthSelect.disabled = false;
+}
 
+function onLengthChange() {
+  const L = +lengthSelect.value;
+  widthSelect.innerHTML = '<option value="">–</option>';
+  widthSelect.disabled = !L;
+  if (L) {
+    const widths = variants
+      .filter(v => v.length === L)
+      .map(v => v.width)
+      .sort((a,b)=>a-b);
+    widths.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w;
+      opt.textContent = `${w}"`;
+      widthSelect.appendChild(opt);
+    });
+  }
+  priceDisplay.textContent = '';
+  fileInputContainer.style.display = 'none';
+  redrawCanvas();
+}
+      
     initLength();
 
     // When length changes, rebuild the width dropdown
