@@ -1,0 +1,134 @@
+/* styles.css */
+/* Global reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body and layout */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  color: #2c3e50;
+}
+
+/* Controls container */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.controls label,
+.controls button {
+  font-size: 0.9rem;
+}
+
+/* Inputs & sliders */
+input[type="number"],
+input[type="range"] {
+  padding: 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input[type="range"] {
+  cursor: pointer;
+}
+
+input[type="file"] {
+  margin-bottom: 1rem;
+}
+
+button {
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* SVG list styling */
+#svgList {
+  width: 100%;
+  max-width: 600px;
+  list-style: none;
+  margin-bottom: 1rem;
+}
+
+#svgList li {
+  background-color: #ecf0f1;
+  margin-bottom: 0.4rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#svgList li:hover {
+  background-color: #d0d7de;
+}
+
+#svgList li.selected {
+  background-color: #3498db;
+  color: #fff;
+}
+
+#svgList .deleteBtn {
+  background-color: transparent;
+  color: #e74c3c;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+#svgList .deleteBtn:hover {
+  color: #c0392b;
+}
+
+/* Canvas styling */
+#mainCanvas {
+  border: 2px solid #bdc3c7;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  max-width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  button, input[type="number"], input[type="range"] {
+    width: 100%;
+  }
+}
