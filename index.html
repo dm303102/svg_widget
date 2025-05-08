@@ -15,7 +15,6 @@
 <body>
   <h1>Upload & Preview your SVG</h1>
   <input type="file" id="fileInput" accept=".svg" />
-  <p id="dimensions">`Width: ${forcedW} Height: ${forcedH}`</p>
   <div id="preview"></div>
 
   <script>
@@ -52,6 +51,7 @@
         reader.readAsText(file);
       });
   </script>
+    <p id="dimensions"Width: ${w} Height: ${h}`</p>
   <img id="staticPreview" alt="Your design @ specified dimensions" />
 </body>
 </html>
