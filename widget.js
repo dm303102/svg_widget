@@ -3,11 +3,6 @@ function svgTextToPngDataUrl(svgText, w, h, callback) {
   // create a Blob URL for the SVG
   const blob = new Blob([svgText], { type: 'image/svg+xml' });
   const url  = URL.createObjectURL(blob);
-
-  // parse ?width=500&height=300 from the URL
-  const params = new URLSearchParams(window.location.search);
-  const forcedW = parseInt(params.get('width'));
-  const forcedH = parseInt(params.get('height'));
   
   const img = new Image();
   img.onload = () => {
@@ -26,6 +21,11 @@ function svgTextToPngDataUrl(svgText, w, h, callback) {
   };
   img.src = url;
 }
+
+  // parse ?width=500&height=300 from the URL
+  const params = new URLSearchParams(window.location.search);
+  const forcedW = parseInt(params.get('width'));
+  const forcedH = parseInt(params.get('height'));
 
 if (forcedW && forcedH && uploadedSvgText) {
   svgTextToPngDataUrl(uploadedSvgText, forcedW, forcedH, (pngDataUrl) => {
