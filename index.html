@@ -5,73 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SVG Preview Widget</title>
   <style>
-    /* Container styles */
-    body {
-      font-family: sans-serif;
-      padding: 1em;
-      max-width: 600px;
-      margin: auto;
-    }
-    label {
-      display: inline-block;
-      margin: 0.5em 0;
-    }
-    input[type="number"] {
-      width: 4em;
-    }
-    #preview {
-      border: 1px solid #ccc;
-      padding: 0.5em;
-      margin-top: 1em;
-      background: #f9f9f9;
-    }
-    #staticPreview {
-      display: block;
-      margin-top: 1em;
-      max-width: 100%;
-      border: 1px solid #666;
-    }
+    body { font-family: sans-serif; padding: 1em; max-width: 600px; margin: auto; }
+    label { display: inline-block; margin: 0.5em 0; }
+    input[type="number"] { width: 4em; }
+    button { margin-left: 0.5em; }
+    #preview { border: 1px solid #ccc; padding: 0.5em; margin-top: 1em; background: #f9f9f9; }
+    #staticPreview { display: block; margin-top: 1em; max-width: 100%; border: 1px solid #666; }
   </style>
 </head>
 <body>
   <h1>Upload &amp; Preview Your SVG</h1>
 
-  <!-- File input -->
+  <!-- File input & controls -->
   <input type="file" id="fileInput" accept=".svg" />
-
-  <!-- Inch-based size inputs -->
-  <div>
-    <label>
-      Width (in):
-      <input type="number" id="widthInput" placeholder="e.g. 3.5" step="any" />
-    </label>
-    <label>
-      Height (in):
-      <input type="number" id="heightInput" placeholder="e.g. 2" step="any" />
-    </label>
+  <div style="margin-top: 1em;">
+    <label>Width (in): <input type="number" id="widthInput" placeholder="3.5" step="any" /></label>
+    <label>Height (in): <input type="number" id="heightInput" placeholder="2" step="any" /></label>
     <button id="renderBtn">Generate Static Preview</button>
+    <button id="toggleScaleMode">Switch to Fill Mode</button>
+    <button id="toggleOrientation">Switch to Landscape</button>
   </div>
 
-  <!-- Live SVG preview and dimensions -->
+  <!-- Live preview -->
   <p id="dimensions">Width: — Height: —</p>
   <div id="preview"></div>
 
-  <!-- Final static preview image -->
+  <!-- Static preview -->
   <img id="staticPreview" alt="Static SVG Preview" />
 
-  <!-- Inline JavaScript -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let uploadedSvgText = null;
-      const fileInput   = document.getElementById('fileInput');
-      const widthInput  = document.getElementById('widthInput');
+      let scaleMode = 'fit';            // 'fit' = contain, 'fill' = cover (max)
+      // DOM references
+      const fileInput = document.getElementById('fileInput');
+      const widthInput = document.getElementById('widthInput');
       const heightInput = document.getElementById('heightInput');
-      const renderBtn   = document.getElementById('renderBtn');
-      const dims        = document.getElementById('dimensions');
-      const preview     = document.getElementById('preview');
-      const staticImg   = document.getElementById('staticPreview');
+      const renderBtn = document.getElementById('renderBtn');
+      const toggleScale = document.getElementById('toggleScaleMode');
+      const toggleOrient = document.getElementById('toggleOrientation');
+      const dims = document.getElementById('dimensions');
+      const preview = document.getElementById('preview');
+      const staticImg = document.getElementById('staticPreview');
 
-      // Read file & show live preview
+      // Upload & live preview
       fileInput.addEventListener('change', e => {
         const file = e.target.files[0];
         if (!file) return;
@@ -80,45 +57,57 @@
           uploadedSvgText = evt.target.result;
           const parser = new DOMParser();
           const svgDoc = parser.parseFromString(uploadedSvgText, 'image/svg+xml');
-          const svgEl  = svgDoc.documentElement;
-
+          const svgEl = svgDoc.documentElement;
           let w = svgEl.getAttribute('width');
           let h = svgEl.getAttribute('height');
           if (!w || !h) {
             const vb = svgEl.getAttribute('viewBox');
-            if (vb) {
-              const parts = vb.split(' ');
-              w = parts[2]; h = parts[3];
-            }
+            if (vb) { const parts = vb.split(' '); w = parts[2]; h = parts[3]; }
           }
-          dims.textContent  = `Width: ${w}px Height: ${h}px`;
+          dims.textContent = `Width: ${w}px Height: ${h}px`;
           preview.innerHTML = uploadedSvgText;
         };
         reader.readAsText(file);
       });
 
-      // Generate static preview on button click
+      // Generate static preview
       renderBtn.addEventListener('click', () => {
-        if (!uploadedSvgText) {
-          alert('Please upload an SVG first!');
-          return;
-        }
+        if (!uploadedSvgText) return alert('Please upload an SVG first!');
         const wIn = parseFloat(widthInput.value);
         const hIn = parseFloat(heightInput.value);
-        if (!(wIn > 0 && hIn > 0)) {
-          alert('Enter valid width/height in inches.');
-          return;
-        }
+        if (!(wIn > 0 && hIn > 0)) return alert('Enter valid width/height in inches.');
         const DPI = 96;
         const wPx = Math.round(wIn * DPI);
         const hPx = Math.round(hIn * DPI);
-        drawSvgWithBorder(uploadedSvgText, wPx, hPx, 6);
+        drawSvgWithBorder(uploadedSvgText, wPx, hPx, 6, scaleMode);
       });
 
-      function drawSvgWithBorder(svgText, wPx, hPx, borderPx = 4) {
+      // Toggle scale mode
+      toggleScale.addEventListener('click', () => {
+        scaleMode = (scaleMode === 'fit') ? 'fill' : 'fit';
+        toggleScale.textContent = (scaleMode === 'fit')
+          ? 'Switch to Fill Mode'
+          : 'Switch to Fit Mode';
+        if (uploadedSvgText) renderBtn.click();
+      });
+
+      // Toggle orientation (swap inputs)
+      toggleOrient.addEventListener('click', () => {
+        const wVal = widthInput.value;
+        widthInput.value = heightInput.value;
+        heightInput.value = wVal;
+        toggleOrient.textContent =
+          toggleOrient.textContent.includes('Landscape')
+            ? 'Switch to Portrait'
+            : 'Switch to Landscape';
+        if (uploadedSvgText) renderBtn.click();
+      });
+
+      // Draw with border & aspect rules
+      function drawSvgWithBorder(svgText, wPx, hPx, borderPx = 4, mode = 'fit') {
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
-        const svgEl  = svgDoc.documentElement;
+        const svgEl = svgDoc.documentElement;
         let origW = parseFloat(svgEl.getAttribute('width'));
         let origH = parseFloat(svgEl.getAttribute('height'));
         if (!origW || !origH) {
@@ -126,24 +115,27 @@
           origW = parseFloat(vb?.[2] || wPx);
           origH = parseFloat(vb?.[3] || hPx);
         }
-        const scale = Math.min(wPx/origW, hPx/origH);
+        // choose scale: fit or fill
+        const scale = (mode === 'fit')
+          ? Math.min(wPx/origW, hPx/origH)
+          : Math.max(wPx/origW, hPx/origH);
         const drawW = origW * scale;
         const drawH = origH * scale;
         const canvas = document.createElement('canvas');
-        canvas.width  = wPx + borderPx * 2;
-        canvas.height = hPx + borderPx * 2;
+        canvas.width = wPx + borderPx*2;
+        canvas.height = hPx + borderPx*2;
         const ctx = canvas.getContext('2d');
         ctx.fillStyle = '#fff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth   = borderPx;
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.lineWidth = borderPx;
         ctx.strokeStyle = '#000';
-        ctx.strokeRect(borderPx/2, borderPx/2, wPx + borderPx, hPx + borderPx);
+        ctx.strokeRect(borderPx/2, borderPx/2, wPx+borderPx, hPx+borderPx);
         const blob = new Blob([svgText], { type: 'image/svg+xml' });
-        const url  = URL.createObjectURL(blob);
-        const img  = new Image();
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
         img.onload = () => {
-          const x = borderPx + (wPx - drawW) / 2;
-          const y = borderPx + (hPx - drawH) / 2;
+          const x = borderPx + (wPx - drawW)/2;
+          const y = borderPx + (hPx - drawH)/2;
           ctx.drawImage(img, x, y, drawW, drawH);
           URL.revokeObjectURL(url);
           staticImg.src = canvas.toDataURL('image/png');
