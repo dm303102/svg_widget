@@ -439,9 +439,13 @@ undoBtn.addEventListener('click', () => {
       };
       newImg.src = tmp.toDataURL();
     }
+    if (dragging) {
+    // we already updated it.x/it.y in mousemove
+    updateList();     // refresh the red highlight in <ul>
+    redrawCanvas();   // make sure we draw the last position
+    }
     dragging = false;
   });
-});
 
     renderBtn.addEventListener('click', redrawCanvas);
 
