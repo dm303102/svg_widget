@@ -19,15 +19,11 @@
   <div class="controls">
     <label>
       Length:
-      <select id="lengthSelect">
-        <option value="">–</option>
-      </select>
+      <select id="lengthSelect"><option value="">–</option></select>
     </label>
     <label>
       Width:
-      <select id="widthSelect" disabled>
-        <option value="">–</option>
-      </select>
+      <select id="widthSelect" disabled><option value="">–</option></select>
     </label>
     <span id="priceDisplay"></span>
     <button id="renderBtn">Render Canvas</button>
@@ -52,107 +48,34 @@
     const DPI = 96;
     const borderPx = 4;
 
-    // DOM refs
-        const variants = [
-      { length: 4, width: 4, price: 12.00 },
-      { length: 4, width: 6, price: 14.00 },
-      { length: 4, width: 8, price: 16.00 },
-      { length: 4, width: 10, price: 18.00 },
-      { length: 4, width: 12, price: 20.00 },
-      { length: 6, width: 6, price: 15.00 },
-      { length: 6, width: 8, price: 17.00 },
-      { length: 6, width: 10, price: 19.00 },
-      { length: 6, width: 12, price: 21.00 },
-      { length: 8, width: 8, price: 19.00 },
-      { length: 8, width: 10, price: 21.00 },
-      { length: 8, width: 12, price: 23.00 },
-      { length: 10, width: 10, price: 22.00 },
-      { length: 10, width: 12, price: 24.00 },
-      { length: 12, width: 12, price: 28.00 },
-      { length: 14, width: 4, price: 22.00 },
-      { length: 14, width: 6, price: 24.00 },
-      { length: 14, width: 8, price: 26.00 },
-      { length: 14, width: 10, price: 28.00 },
-      { length: 14, width: 12, price: 30.00 },
-      { length: 16, width: 4, price: 24.00 },
-      { length: 16, width: 6, price: 25.00 },
-      { length: 16, width: 8, price: 27.00 },
-      { length: 16, width: 10, price: 29.00 },
-      { length: 16, width: 12, price: 31.00 },
-      { length: 18, width: 4, price: 26.00 },
-      { length: 18, width: 6, price: 28.00 },
-      { length: 18, width: 8, price: 30.00 },
-      { length: 18, width: 10, price: 32.00 },
-      { length: 18, width: 12, price: 34.00 },
-      { length: 20, width: 4, price: 28.00 },
-      { length: 20, width: 6, price: 30.00 },
-      { length: 20, width: 8, price: 32.00 },
-      { length: 20, width: 10, price: 34.00 },
-      { length: 20, width: 12, price: 36.00 },
-      { length: 22, width: 4, price: 30.00 },
-      { length: 22, width: 6, price: 32.00 },
-      { length: 22, width: 8, price: 34.00 },
-      { length: 22, width: 10, price: 36.00 },
-      { length: 22, width: 12, price: 38.00 },
-      { length: 24, width: 4, price: 30.00 },
-      { length: 24, width: 6, price: 32.00 },
-      { length: 24, width: 8, price: 34.00 },
-      { length: 24, width: 10, price: 36.00 },
-      { length: 24, width: 12, price: 38.00 },
-      { length: 26, width: 4, price: 32.00 },
-      { length: 26, width: 6, price: 34.00 },
-      { length: 26, width: 8, price: 36.00 },
-      { length: 26, width: 10, price: 38.00 },
-      { length: 26, width: 12, price: 40.00 },
-      { length: 28, width: 4, price: 34.00 },
-      { length: 28, width: 6, price: 36.00 },
-      { length: 28, width: 8, price: 38.00 },
-      { length: 28, width: 10, price: 40.00 },
-      { length: 28, width: 12, price: 42.00 },
-      { length: 30, width: 4, price: 36.00 },
-      { length: 30, width: 6, price: 38.00 },
-      { length: 30, width: 8, price: 40.00 },
-      { length: 30, width: 10, price: 42.00 },
-      { length: 30, width: 12, price: 44.00 },
-      { length: 32, width: 4, price: 38.00 },
-      { length: 32, width: 6, price: 40.00 },
-      { length: 32, width: 8, price: 42.00 },
-      { length: 32, width: 10, price: 44.00 },
-      { length: 32, width: 12, price: 46.00 },
-      { length: 34, width: 4, price: 40.00 },
-      { length: 34, width: 6, price: 42.00 },
-      { length: 34, width: 8, price: 44.00 },
-      { length: 34, width: 10, price: 46.00 },
-      { length: 34, width: 12, price: 48.00 },
-      { length: 36, width: 4, price: 42.00 },
-      { length: 36, width: 6, price: 44.00 },
-      { length: 36, width: 8, price: 46.00 },
-      { length: 36, width: 10, price: 48.00 },
-      { length: 36, width: 12, price: 50.00 },
-    ];
-    //const widthInput = document.getElementById('widthInput');
-    //const heightInput = document.getElementById('heightInput');
-    const renderBtn = document.getElementById('renderBtn');
-    const toggleOrient = document.getElementById('toggleOrientation');
-    const exportBtn = document.getElementById('exportBtn');
+    // Element references
+    const widthInput    = document.getElementById('widthInput');
+    const heightInput   = document.getElementById('heightInput');
+    const lenSel        = document.getElementById('lengthSelect');
+    const widSel        = document.getElementById('widthSelect');
+    const priceDisplay  = document.getElementById('priceDisplay');
+    const renderBtn     = document.getElementById('renderBtn');
+    const toggleOrient  = document.getElementById('toggleOrientation');
+    const exportBtn     = document.getElementById('exportBtn');
     const fileInputContainer = document.getElementById('fileInputContainer');
-    const fileInput = document.getElementById('fileInput');
-    const svgList = document.getElementById('svgList');
-    const canvas = document.getElementById('mainCanvas');
-    const ctx = canvas.getContext('2d');
+    const fileInput     = document.getElementById('fileInput');
+    const svgList       = document.getElementById('svgList');
+    const canvas        = document.getElementById('mainCanvas');
+    const ctx           = canvas.getContext('2d');
 
-        // === 2) Populate selects ===
-    const lenSel = document.getElementById('lengthSelect');
-    const widSel = document.getElementById('widthSelect');
-    const priceDisplay = document.getElementById('priceDisplay');
+    // Your Etsy variants
+    const variants = [
+      { length:4, width:4, price:12.00 }, { length:4, width:6, price:14.00 },
+      /* … all 85 variants … */
+      { length:36, width:12, price:50.00 }
+    ];
 
-        function initSelectors() {
-      // unique lengths
+    // Populate Length → Width selectors
+    function initSelectors() {
       const lengths = [...new Set(variants.map(v=>v.length))].sort((a,b)=>a-b);
       lengths.forEach(l=>{
         const o = document.createElement('option');
-        o.value = l;
-        o.textContent = `${l}"`;
+        o.value = l; o.textContent = `${l}"`;
         lenSel.appendChild(o);
       });
       lenSel.addEventListener('change', onLengthChange);
@@ -165,106 +88,87 @@
       const L = parseInt(lenSel.value);
       if (!L) { widSel.disabled = true; return; }
       widSel.disabled = false;
-      // widths for that length
-      const widths = variants
-        .filter(v=>v.length===L)
-        .map(v=>v.width)
-        .sort((a,b)=>a-b);
+      const widths = variants.filter(v=>v.length===L).map(v=>v.width).sort((a,b)=>a-b);
       widths.forEach(w=>{
         const o = document.createElement('option');
-        o.value = w;
-        o.textContent = `${w}"`;
+        o.value = w; o.textContent = `${w}"`;
         widSel.appendChild(o);
       });
     }
 
     function updatePriceAndCanvas() {
-      const L = parseInt(lenSel.value),
-            W = parseInt(widSel.value);
+      const L = parseInt(lenSel.value), W = parseInt(widSel.value);
       const variant = variants.find(v=>v.length===L && v.width===W);
       priceDisplay.textContent = variant
         ? `Price: $${variant.price.toFixed(2)}`
         : '';
-      // now that you have L & W, you can:
-      //  • show the file-input
-      //  • call your redrawAll() but using L,W instead of number inputs
-      if (variant) {
-        document.getElementById('fileInputContainer').style.display = 'block';
-        // e.g. redrawAll(L, W);
-      }
+      if (variant) fileInputContainer.style.display = 'block';
+      // You can also call redrawAll(L, W) here, if you adapt redrawAll to accept those.
     }
-    
+
+    // Core redraw
     function redrawAll() {
-      const wIn = parseFloat(widthInput.value);
-      const hIn = parseFloat(heightInput.value);
-      if (!(wIn > 0 && hIn > 0)) {
-        fileInputContainer.style.display = 'none';
-        return;
-      }
+      const wIn = parseFloat(widthInput.value), hIn = parseFloat(heightInput.value);
+      if (!(wIn>0 && hIn>0)) { fileInputContainer.style.display='none'; return; }
       fileInputContainer.style.display = 'block';
-      const wPx = Math.round(wIn * DPI);
-      const hPx = Math.round(hIn * DPI);
-      canvas.width = wPx + borderPx * 2;
-      canvas.height = hPx + borderPx * 2;
+      const wPx = Math.round(wIn*DPI), hPx = Math.round(hIn*DPI);
+      canvas.width = wPx + borderPx*2;
+      canvas.height = hPx + borderPx*2;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.lineWidth = borderPx; ctx.strokeStyle = '#000';
-      ctx.strokeRect(borderPx/2, borderPx/2, wPx + borderPx, hPx + borderPx);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.lineWidth = borderPx; ctx.strokeStyle='#000';
+      ctx.strokeRect(borderPx/2,borderPx/2,wPx+borderPx,hPx+borderPx);
 
-      // dimension labels
-      ctx.fillStyle = '#000'; ctx.font = '16px sans-serif';
-      ctx.textAlign = 'left'; ctx.fillText(`W: ${wIn}"`, borderPx + 4, canvas.height - 4);
-      ctx.textAlign = 'right'; ctx.fillText(`H: ${hIn}"`, canvas.width - borderPx - 4, canvas.height - 4);
+      // Labels
+      ctx.fillStyle='#000'; ctx.font='16px sans-serif';
+      ctx.textAlign='left';  ctx.fillText(`W: ${wIn}"`, borderPx+4, canvas.height-4);
+      ctx.textAlign='right'; ctx.fillText(`H: ${hIn}"`, canvas.width-borderPx-4, canvas.height-4);
 
-      // draw images
-      images.forEach(item => {
-        const drawW = item.origW * item.fitScale * item.scalePercent;
-        const drawH = item.origH * item.fitScale * item.scalePercent;
+      // Draw SVGs
+      images.forEach(item=>{
+        const drawW = item.origW*item.fitScale*item.scalePercent;
+        const drawH = item.origH*item.fitScale*item.scalePercent;
         ctx.drawImage(item.image, item.x, item.y, drawW, drawH);
       });
 
-      // draw selection handle
+      // Draw selection handle
       if (selectedId) {
-        const item = images.find(i => i.id === selectedId);
-        const drawW = item.origW * item.fitScale * item.scalePercent;
-        const drawH = item.origH * item.fitScale * item.scalePercent;
-        // border
-        ctx.lineWidth = 2; ctx.strokeStyle = 'red';
-        ctx.strokeRect(item.x, item.y, drawW, drawH);
-        // handle above center
+        const item = images.find(i=>i.id===selectedId);
+        const drawW = item.origW*item.fitScale*item.scalePercent;
+        const drawH = item.origH*item.fitScale*item.scalePercent;
+        ctx.lineWidth=2; ctx.strokeStyle='red';
+        ctx.strokeRect(item.x,item.y,drawW,drawH);
+
+        // Handle circle
         handleCenter.x = item.x + drawW/2;
         handleCenter.y = item.y - 12;
         ctx.beginPath();
-        ctx.arc(handleCenter.x, handleCenter.y, 6, 0, 2 * Math.PI);
-        ctx.fillStyle = '#3498db'; ctx.fill();
-        ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.arc(handleCenter.x, handleCenter.y, 6, 0, 2*Math.PI);
+        ctx.fillStyle='#3498db'; ctx.fill();
+        ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
       }
     }
 
+    // Update list with per‑SVG slider + delete
     function updateList() {
       svgList.innerHTML = '';
-      images.forEach((item, idx) => {
+      images.forEach((item,i)=>{
         const li = document.createElement('li');
         li.dataset.id = item.id;
-        if (item.id === selectedId) li.classList.add('selected');
+        if(item.id===selectedId) li.classList.add('selected');
         const controls = document.createElement('div');
         controls.className = 'item-controls';
         const slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = 10; slider.max = 200;
-        slider.value = Math.round(item.scalePercent * 100);
+        slider.type='range'; slider.min=10; slider.max=200;
+        slider.value = Math.round(item.scalePercent*100);
         slider.dataset.id = item.id;
         const del = document.createElement('button');
-        del.textContent = 'Delete';
-        del.dataset.id = item.id;
-
-        controls.appendChild(slider);
-        controls.appendChild(del);
-        li.textContent = `SVG ${idx+1}`;
-        li.appendChild(controls);
-        svgList.appendChild(li);
+        del.textContent='Delete'; del.dataset.id=item.id;
+        controls.append(slider, del);
+        li.textContent = `SVG ${i+1}`;
+        li.append(controls);
+        svgList.append(li);
       });
     }
 
@@ -274,140 +178,130 @@
       redrawAll();
     }
 
-    svgList.addEventListener('click', e => {
+    // List event handlers
+    svgList.addEventListener('click', e=>{
       const id = e.target.dataset.id;
-      if (!id) return;
-      if (e.target.tagName === 'BUTTON') {
-        images.splice(images.findIndex(i=>i.id===id), 1);
-        selectedId = images[0]?.id || null;
-        updateList();
-        redrawAll();
+      if(!id) return;
+      if(e.target.tagName==='BUTTON') {
+        images.splice(images.findIndex(i=>i.id===id),1);
+        selectedId = images[0]?.id||null;
+        updateList(); redrawAll();
       }
     });
 
-    svgList.addEventListener('input', e => {
-      if (e.target.type === 'range') {
-        const id = e.target.dataset.id;
-        const item = images.find(i => i.id === id);
-        item.scalePercent = e.target.value / 100;
-        selectImage(id);
+    svgList.addEventListener('input', e=>{
+      if(e.target.type==='range') {
+        const item = images.find(i=>i.id===e.target.dataset.id);
+        item.scalePercent = e.target.value/100;
+        selectImage(item.id);
       }
     });
 
+    // Render & orientation
     renderBtn.addEventListener('click', redrawAll);
-
-    toggleOrient.addEventListener('click', () => {
-      [widthInput.value, heightInput.value] = [heightInput.value, widthInput.value];
+    toggleOrient.addEventListener('click',()=>{
+      [widthInput.value,heightInput.value]=[heightInput.value,widthInput.value];
       toggleOrient.textContent = toggleOrient.textContent.includes('Landscape')
-        ? 'Switch to Portrait'
-        : 'Switch to Landscape';
-      const wIn = parseFloat(widthInput.value),
-            hIn = parseFloat(heightInput.value);
-      const wPx = Math.round(wIn * DPI),
-            hPx = Math.round(hIn * DPI);
-      images.forEach(item => {
+        ? 'Switch to Portrait' : 'Switch to Landscape';
+      const wIn=parseFloat(widthInput.value),
+            hIn=parseFloat(heightInput.value);
+      const wPx=Math.round(wIn*DPI), hPx=Math.round(hIn*DPI);
+      images.forEach(item=>{
         item.fitScale = Math.min(wPx/item.origW, hPx/item.origH);
-        const drawW = item.origW * item.fitScale * item.scalePercent;
-        const drawH = item.origH * item.fitScale * item.scalePercent;
-        item.x = borderPx + (wPx - drawW)/2;
-        item.y = borderPx + (hPx - drawH)/2;
+        const drawW=item.origW*item.fitScale*item.scalePercent;
+        const drawH=item.origH*item.fitScale*item.scalePercent;
+        item.x = borderPx+(wPx-drawW)/2;
+        item.y = borderPx+(hPx-drawH)/2;
       });
       redrawAll();
     });
 
-    canvas.addEventListener('mousedown', e => {
-      if (!selectedId) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left, y = e.clientY - rect.top;
-      const dx = x - handleCenter.x, dy = y - handleCenter.y;
-      if (dx*dx + dy*dy <= 6*6) {
-        dragging = true;
-        const item = images.find(i=>i.id===selectedId);
-        dragOffset.x = x - item.x;
-        dragOffset.y = y - item.y;
-        canvas.style.cursor = 'grabbing';
+    // Drag via handle
+    canvas.addEventListener('mousedown', e=>{
+      if(!selectedId) return;
+      const r=canvas.getBoundingClientRect();
+      const x=e.clientX-r.left, y=e.clientY-r.top;
+      const dx=x-handleCenter.x, dy=y-handleCenter.y;
+      if(dx*dx+dy*dy<=6*6) {
+        dragging=true;
+        const item=images.find(i=>i.id===selectedId);
+        dragOffset.x = x-item.x;
+        dragOffset.y = y-item.y;
+        canvas.style.cursor='grabbing';
       }
     });
-    canvas.addEventListener('mousemove', e => {
-      if (dragging) {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left, y = e.clientY - rect.top;
-        const item = images.find(i=>i.id===selectedId);
-        item.x = x - dragOffset.x;
-        item.y = y - dragOffset.y;
+    canvas.addEventListener('mousemove', e=>{
+      if(dragging) {
+        const r=canvas.getBoundingClientRect();
+        const x=e.clientX-r.left, y=e.clientY-r.top;
+        const item=images.find(i=>i.id===selectedId);
+        item.x=x-dragOffset.x;
+        item.y=y-dragOffset.y;
         redrawAll();
       }
     });
-    ['mouseup','mouseleave'].forEach(ev =>
-      canvas.addEventListener(ev, () => {
-        dragging = false;
-        canvas.style.cursor = 'default';
+    ['mouseup','mouseleave'].forEach(ev=>
+      canvas.addEventListener(ev,()=>{
+        dragging=false; canvas.style.cursor='default';
       })
     );
 
-    exportBtn.addEventListener('click', () => {
-      // default to SVG export
-      const wIn = parseFloat(widthInput.value),
-            hIn = parseFloat(heightInput.value);
-      const wPx = Math.round(wIn * DPI),
-            hPx = Math.round(hIn * DPI);
-      const xmlns = 'http://www.w3.org/2000/svg';
-      let svg = `<?xml version="1.0" encoding="UTF-8"?><svg xmlns="${xmlns}" width="${wPx+borderPx*2}" height="${hPx+borderPx*2}" viewBox="0 0 ${wPx+borderPx*2} ${hPx+borderPx*2}">`;
-      svg += `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
-      svg += `<text x="${borderPx+4}" y="${hPx+borderPx*2-4}" font-family="sans-serif" font-size="16">W: ${wIn}"</text>`;
-      svg += `<text x="${wPx+borderPx*2-4}" y="${hPx+borderPx*2-4}" font-family="sans-serif" font-size="16" text-anchor="end">H: ${hIn}"</text>`;
-      images.forEach(item => {
-        const drawW = item.origW * item.fitScale * item.scalePercent;
-        const drawH = item.origH * item.fitScale * item.scalePercent;
-        const inner = new DOMParser().parseFromString(item.svgText,'image/svg+xml').documentElement.innerHTML;
-        svg += `<svg x="${item.x}" y="${item.y}" width="${drawW}" height="${drawH}" viewBox="0 0 ${item.origW} ${item.origH}" xmlns="${xmlns}">${inner}</svg>`;
+    // Single export button → SVG
+    exportBtn.addEventListener('click', ()=>{
+      const wIn=parseFloat(widthInput.value),
+            hIn=parseFloat(heightInput.value);
+      const wPx=Math.round(wIn*DPI), hPx=Math.round(hIn*DPI);
+      const xmlns='http://www.w3.org/2000/svg';
+      let svg=`<?xml version="1.0" encoding="UTF-8"?><svg xmlns="${xmlns}" width="${wPx+borderPx*2}" height="${hPx+borderPx*2}" viewBox="0 0 ${wPx+borderPx*2} ${hPx+borderPx*2}">`;
+      svg+=`<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
+      svg+=`<text x="${borderPx+4}" y="${hPx+borderPx*2-4}" font-family="sans-serif" font-size="16">W: ${wIn}"</text>`;
+      svg+=`<text x="${wPx+borderPx*2-4}" y="${hPx+borderPx*2-4}" font-family="sans-serif" font-size="16" text-anchor="end">H: ${hIn}"</text>`;
+      images.forEach(item=>{
+        const drawW=item.origW*item.fitScale*item.scalePercent;
+        const drawH=item.origH*item.fitScale*item.scalePercent;
+        const inner=new DOMParser().parseFromString(item.svgText,'image/svg+xml').documentElement.innerHTML;
+        svg+=`<svg x="${item.x}" y="${item.y}" width="${drawW}" height="${drawH}" viewBox="0 0 ${item.origW} ${item.origH}" xmlns="${xmlns}">${inner}</svg>`;
       });
-      svg += '</svg>';
-      const blob = new Blob([svg], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'canvas-export.svg';
-      link.click();
+      svg+='</svg>';
+      const blob=new Blob([svg],{type:'image/svg+xml'});
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement('a');
+      link.href=url; link.download='canvas-export.svg'; link.click();
       URL.revokeObjectURL(url);
     });
 
-    fileInput.addEventListener('change', e => {
-      const files = Array.from(e.target.files);
-      const wIn = parseFloat(widthInput.value),
-            hIn = parseFloat(heightInput.value);
-      if (!(wIn > 0 && hIn > 0)) return;
-      const wPx = Math.round(wIn * DPI),
-            hPx = Math.round(hIn * DPI);
-
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = evt => {
-          const svgText = evt.target.result;
-          const doc = new DOMParser().parseFromString(svgText,'image/svg+xml');
-          const svgEl = doc.documentElement;
-          const origW = parseFloat(svgEl.getAttribute('width'))||parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
-          const origH = parseFloat(svgEl.getAttribute('height'))||parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
-          const fitScale = Math.min(wPx/origW, hPx/origH);
-          const drawW = origW*fitScale;
-          const drawH = origH*fitScale;
-          const x = borderPx+(wPx-drawW)/2;
-          const y = borderPx+(hPx-drawH)/2;
-          const id = Date.now()+'_'+Math.random();
-          const blob = new Blob([svgText],{type:'image/svg+xml'});
-          const url = URL.createObjectURL(blob);
-          const img = new Image();
-          img.onload = () => {
+    // File input & initial selectors
+    fileInput.addEventListener('change', e=>{
+      const files=Array.from(e.target.files);
+      const wIn=parseFloat(widthInput.value), hIn=parseFloat(heightInput.value);
+      if(!(wIn>0&&hIn>0)) return;
+      const wPx=Math.round(wIn*DPI), hPx=Math.round(hIn*DPI);
+      files.forEach(file=>{
+        const reader=new FileReader();
+        reader.onload=evt=>{
+          const svgText=evt.target.result;
+          const doc=new DOMParser().parseFromString(svgText,'image/svg+xml');
+          const svgEl=doc.documentElement;
+          const origW=parseFloat(svgEl.getAttribute('width'))||parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
+          const origH=parseFloat(svgEl.getAttribute('height'))||parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
+          const fitScale=Math.min(wPx/origW, hPx/origH);
+          const drawW=origW*fitScale, drawH=origH*fitScale;
+          const x=borderPx+(wPx-drawW)/2, y=borderPx+(hPx-drawH)/2;
+          const id=Date.now()+'_'+Math.random();
+          const blob=new Blob([svgText],{type:'image/svg+xml'});
+          const url=URL.createObjectURL(blob);
+          const img=new Image();
+          img.onload=()=>{
             URL.revokeObjectURL(url);
             images.push({id,svgText,image:img,origW,origH,fitScale,scalePercent:1,x,y});
             selectImage(id);
           };
-          img.src = url;
+          img.src=url;
         };
         reader.readAsText(file);
       });
     });
-        // kick it off
+
     initSelectors();
   });
   </script>
