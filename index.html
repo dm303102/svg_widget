@@ -196,6 +196,16 @@
     lengthSelect.addEventListener('change', onLengthChange);
     widthSelect.addEventListener('change', onWidthChange);
 
+    widthSelect.addEventListener('change', () => {
+    onWidthChange();
+    redrawCanvas();
+    });
+
+    lengthSelect.addEventListener('change', () => {
+    onLengthChange();
+    redrawCanvas();
+   });
+    
     // --- redraw ---
     function redrawCanvas() {
       const L = +lengthSelect.value, W = +widthSelect.value;
