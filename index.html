@@ -483,6 +483,7 @@ undoBtn.addEventListener('click', () => {
           img.onload = ()=> {
             images.push({ id, filename: file.name, svgText: txt, image: img,
                           origW, origH, fitScale, scalePercent:1, rotation:0, x, y });
+            pushHistory();
             selectImage(id);
           };
           img.src = URL.createObjectURL(new Blob([txt],{type:'image/svg+xml'}));
