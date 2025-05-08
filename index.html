@@ -372,6 +372,7 @@ undoBtn.addEventListener('click', () => {
       const dW = sel.origW*sel.fitScale*sel.scalePercent;
       const dH = sel.origH*sel.fitScale*sel.scalePercent;
       if (x>=sel.x && x<=sel.x+dW && y>=sel.y && y<=sel.y+dH) {
+        pushHistory();      // record this position before the move
         dragging = true;
         dragOffset = { x: x - sel.x, y: y - sel.y };
       }
