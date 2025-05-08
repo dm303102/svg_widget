@@ -429,11 +429,16 @@
     toggleBtn.addEventListener('click', () => {
       // swap values but keep options
       const oldL = lengthSelect.value, oldW = widthSelect.value;
+     // swap them
       lengthSelect.value = oldW;
-      onLengthChange();
-      widthSelect.value = oldL;
-      onWidthChange();
+      widthSelect.value  = oldL;
+
+      // now trigger their normal change‐handlers by dispatching real "change" events
+      lengthSelect.dispatchEvent(new Event('change'));
+      widthSelect.dispatchEvent(new Event('change'));
+      
       redrawCanvas();
+      
       toggleBtn.textContent = toggleBtn.textContent.includes('Landscape')
         ? 'Switch to Portrait' : 'Switch to Landscape';
     });
