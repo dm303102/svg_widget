@@ -38,6 +38,40 @@
   <canvas id="mainCanvas"></canvas>
 
   <script>
+
+    function initLength() {
+  const lengths = Array.from(new Set(variants.map(v => v.length))).sort((a,b)=>a-b);
+  lengthSelect.innerHTML = '<option value="">–</option>';
+  lengths.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l;
+    opt.textContent = `${l}"`;
+    lengthSelect.appendChild(opt);
+  });
+  lengthSelect.disabled = false;
+}
+
+function onLengthChange() {
+  const L = +lengthSelect.value;
+  widthSelect.innerHTML = '<option value="">–</option>';
+  widthSelect.disabled = !L;
+  if (L) {
+    const widths = variants
+      .filter(v => v.length === L)
+      .map(v => v.width)
+      .sort((a,b)=>a-b);
+    widths.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w;
+      opt.textContent = `${w}"`;
+      widthSelect.appendChild(opt);
+    });
+  }
+  priceDisplay.textContent = '';
+  fileInputContainer.style.display = 'none';
+  redrawCanvas();
+}
+    
   document.addEventListener('DOMContentLoaded', () => {
     const variants = [
       { length: 4, width: 4, price: 12.00 },
@@ -144,6 +178,39 @@
     let dragging = false, cropping = false, dragOffset = { x: 0, y: 0 },
       cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
 
+    initLength();
+
+    // When length changes, rebuild the width dropdown
+  function onLengthChange() {
+    const L = +lengthSelect.value;
+    widthSelect.innerHTML = '<option value="">–</option>';
+    widthSelect.disabled = !L;
+    if (L) {
+      const widths = variants
+        .filter(v => v.length === L)
+        .map(v => v.width)
+        .sort((a,b)=>a-b);
+      widths.forEach(w => {
+        const o = document.createElement('option');
+        o.value = w;
+        o.textContent = `${w}"`;
+        widthSelect.appendChild(o);
+      });
+    }
+    priceDisplay.textContent = '';
+    fileInputContainer.style.display = 'none';
+    redrawCanvas();
+  }
+
+  // When width changes, show price & file input
+  function onWidthChange() {
+    const L = +lengthSelect.value, W = +widthSelect.value;
+    const v = variants.find(x=>x.length===L&&x.width===W);
+    priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
+    fileInputContainer.style.display = v ? 'block' : 'none';
+    redrawCanvas();
+  }
+    
     function pushHistory() {
       history.push(images.map(item => ({ ...item })));
       if (history.length > 50) history.shift();
@@ -374,8 +441,7 @@ function finalizeCrop() {
     redrawCanvas();
   };
   newImg.src = tmp.toDataURL();
-}
-    initLength();
+}    
   </script>
 </body>
 </html>
