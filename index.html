@@ -424,7 +424,17 @@
     });
 
     // --- forcerender, toggle & export ---
-    renderBtn.addEventListener('click', redrawCanvas);
+    renderBtn.addEventListener('click', () => {
+      // force your selection logic to run
+      onLengthChange();
+      onWidthChange();
+    
+      // rebuild the SVG‐list (so selectedId borders, scales, etc. are up‐to‐date)
+      updateList();
+    
+      // finally draw
+      redrawCanvas();
+    });
 
     toggleBtn.addEventListener('click', () => {
       // swap values but keep options
