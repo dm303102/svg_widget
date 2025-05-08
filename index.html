@@ -204,6 +204,14 @@
     fileInputContainer.style.display = v ? 'block' : 'none';
     redrawCanvas();
   }
+
+undoBtn.addEventListener('click', () => {
+  if (!history.length) return;
+  images = history.pop();
+  selectedId = images[0]?.id || null;
+  updateList();
+  redrawCanvas();
+});
     
     // --- redraw ---
  // Draw the border + images
@@ -383,29 +391,50 @@
         redrawCanvas();
       }
     });
+ 
     ['mouseup','mouseleave'].forEach(ev=>{
-      canvas.addEventListener(ev, ()=>{
-        if (cropping && cropStart.startX!=null) {
-          pushHistory();
-          const it = images.find(img=>img.id===selectedId);
-          // compute crop relative
-          const x0 = Math.min(cropStart.startX, cropStart.curX) - it.x;
-          const y0 = Math.min(cropStart.startY, cropStart.curY) - it.y;
-          const w0 = Math.abs(cropStart.curX - cropStart.startX);
-          const h0 = Math.abs(cropStart.curY - cropStart.startY);
-          // update SVG viewBox
-          const doc = new DOMParser().parseFromString(it.svgText,'image/svg+xml');
-          const svgEl = doc.documentElement;
-          svgEl.setAttribute('viewBox', `${x0} ${y0} ${w0} ${h0}`);
-          svgEl.removeAttribute('width');
-          svgEl.removeAttribute('height');
-          it.svgText = new XMLSerializer().serializeToString(svgEl);
-          it.origW = w0; it.origH = h0;
-          cropping = false;
-        }
-        dragging = false;
-      });
-    });
+  canvas.addEventListener(ev, ()=>{
+    if (cropping && cropStart.startX!=null) {
+      const it = images.find(img => img.id === selectedId);
+      // 1) compute the crop region relative to the image:
+      const x0 = Math.min(cropStart.startX, cropStart.curX) - it.x;
+      const y0 = Math.min(cropStart.startY, cropStart.curY) - it.y;
+      const w0 = Math.abs(cropStart.curX - cropStart.startX);
+      const h0 = Math.abs(cropStart.curY - cropStart.startY);
+
+      // 2) push history _before_ we mutate:
+      pushHistory();
+
+      // 3) draw that region into a temp canvas:
+      const tmp = document.createElement('canvas');
+      tmp.width  = w0;
+      tmp.height = h0;
+      const tctx = tmp.getContext('2d');
+      tctx.drawImage(it.image,
+        x0, y0, w0, h0,    // source
+        0,  0,  w0, h0     // dest
+      );
+
+      // 4) replace the Image object with the cropped one
+      const newImg = new Image();
+      newImg.onload = () => {
+        it.image        = newImg;
+        it.origW        = w0;
+        it.origH        = h0;
+        it.fitScale     = 1;        // you can recalc if you like
+        it.scalePercent = 1;
+        it.x = borderPx + (canvas.width/2 - w0/2);
+        it.y = borderPx + (canvas.height/2 - h0/2);
+
+        cropping = false;
+        updateList();
+        redrawCanvas();
+      };
+      newImg.src = tmp.toDataURL();
+    }
+    dragging = false;
+  });
+});
 
     renderBtn.addEventListener('click', redrawCanvas);
 
