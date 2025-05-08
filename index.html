@@ -17,8 +17,19 @@
   <h1>Upload &amp; Preview Your SVGs</h1>
 
   <div class="controls">
-    <label>Canvas Width (in): <input type="number" id="widthInput" step="any" placeholder="3.5" /></label>
-    <label>Canvas Height (in): <input type="number" id="heightInput" step="any" placeholder="2" /></label>
+    <label>
+      Length:
+      <select id="lengthSelect">
+        <option value="">–</option>
+      </select>
+    </label>
+    <label>
+      Width:
+      <select id="widthSelect" disabled>
+        <option value="">–</option>
+      </select>
+    </label>
+    <span id="priceDisplay"></span>
     <button id="renderBtn">Render Canvas</button>
     <button id="toggleOrientation">Switch to Landscape</button>
     <button id="exportBtn">Export Canvas</button>
@@ -43,8 +54,86 @@
       const borderPx = 4;
 
       // DOM refs
-      const widthInput = document.getElementById('widthInput');
-      const heightInput = document.getElementById('heightInput');
+          const variants = [
+      { length: 4, width: 4, price: 12.00 },
+      { length: 4, width: 6, price: 14.00 },
+      { length: 4, width: 8, price: 16.00 },
+      { length: 4, width: 10, price: 18.00 },
+      { length: 4, width: 12, price: 20.00 },
+      { length: 6, width: 6, price: 15.00 },
+      { length: 6, width: 8, price: 17.00 },
+      { length: 6, width: 10, price: 19.00 },
+      { length: 6, width: 12, price: 21.00 },
+      { length: 8, width: 8, price: 19.00 },
+      { length: 8, width: 10, price: 21.00 },
+      { length: 8, width: 12, price: 23.00 },
+      { length: 10, width: 10, price: 22.00 },
+      { length: 10, width: 12, price: 24.00 },
+      { length: 12, width: 12, price: 28.00 },
+      { length: 14, width: 4, price: 22.00 },
+      { length: 14, width: 6, price: 24.00 },
+      { length: 14, width: 8, price: 26.00 },
+      { length: 14, width: 10, price: 28.00 },
+      { length: 14, width: 12, price: 30.00 },
+      { length: 16, width: 4, price: 24.00 },
+      { length: 16, width: 6, price: 25.00 },
+      { length: 16, width: 8, price: 27.00 },
+      { length: 16, width: 10, price: 29.00 },
+      { length: 16, width: 12, price: 31.00 },
+      { length: 18, width: 4, price: 26.00 },
+      { length: 18, width: 6, price: 28.00 },
+      { length: 18, width: 8, price: 30.00 },
+      { length: 18, width: 10, price: 32.00 },
+      { length: 18, width: 12, price: 34.00 },
+      { length: 20, width: 4, price: 28.00 },
+      { length: 20, width: 6, price: 30.00 },
+      { length: 20, width: 8, price: 32.00 },
+      { length: 20, width: 10, price: 34.00 },
+      { length: 20, width: 12, price: 36.00 },
+      { length: 22, width: 4, price: 30.00 },
+      { length: 22, width: 6, price: 32.00 },
+      { length: 22, width: 8, price: 34.00 },
+      { length: 22, width: 10, price: 36.00 },
+      { length: 22, width: 12, price: 38.00 },
+      { length: 24, width: 4, price: 30.00 },
+      { length: 24, width: 6, price: 32.00 },
+      { length: 24, width: 8, price: 34.00 },
+      { length: 24, width: 10, price: 36.00 },
+      { length: 24, width: 12, price: 38.00 },
+      { length: 26, width: 4, price: 32.00 },
+      { length: 26, width: 6, price: 34.00 },
+      { length: 26, width: 8, price: 36.00 },
+      { length: 26, width: 10, price: 38.00 },
+      { length: 26, width: 12, price: 40.00 },
+      { length: 28, width: 4, price: 34.00 },
+      { length: 28, width: 6, price: 36.00 },
+      { length: 28, width: 8, price: 38.00 },
+      { length: 28, width: 10, price: 40.00 },
+      { length: 28, width: 12, price: 42.00 },
+      { length: 30, width: 4, price: 36.00 },
+      { length: 30, width: 6, price: 38.00 },
+      { length: 30, width: 8, price: 40.00 },
+      { length: 30, width: 10, price: 42.00 },
+      { length: 30, width: 12, price: 44.00 },
+      { length: 32, width: 4, price: 38.00 },
+      { length: 32, width: 6, price: 40.00 },
+      { length: 32, width: 8, price: 42.00 },
+      { length: 32, width: 10, price: 44.00 },
+      { length: 32, width: 12, price: 46.00 },
+      { length: 34, width: 4, price: 40.00 },
+      { length: 34, width: 6, price: 42.00 },
+      { length: 34, width: 8, price: 44.00 },
+      { length: 34, width: 10, price: 46.00 },
+      { length: 34, width: 12, price: 48.00 },
+      { length: 36, width: 4, price: 42.00 },
+      { length: 36, width: 6, price: 44.00 },
+      { length: 36, width: 8, price: 46.00 },
+      { length: 36, width: 10, price: 48.00 },
+      { length: 36, width: 12, price: 50.00 },
+    ];
+
+     // const widthInput = document.getElementById('widthInput');
+     // const heightInput = document.getElementById('heightInput');
       const renderBtn = document.getElementById('renderBtn');
       const toggleOrient = document.getElementById('toggleOrientation');
       const exportBtn = document.getElementById('exportBtn');
@@ -55,6 +144,63 @@
       const canvas = document.getElementById('mainCanvas');
       const ctx = canvas.getContext('2d');
 
+          // === 2) Populate selects ===
+    const lenSel = document.getElementById('lengthSelect');
+    const widSel = document.getElementById('widthSelect');
+    const priceDisplay = document.getElementById('priceDisplay');
+
+    function initSelectors() {
+      // unique lengths
+      const lengths = [...new Set(variants.map(v=>v.length))].sort((a,b)=>a-b);
+      lengths.forEach(l=>{
+        const o = document.createElement('option');
+        o.value = l;
+        o.textContent = `${l}"`;
+        lenSel.appendChild(o);
+      });
+      lenSel.addEventListener('change', onLengthChange);
+      widSel.addEventListener('change', updatePriceAndCanvas);
+    }
+
+    function onLengthChange() {
+      widSel.innerHTML = '<option value="">–</option>';
+      priceDisplay.textContent = '';
+      const L = parseInt(lenSel.value);
+      if (!L) { widSel.disabled = true; return; }
+      widSel.disabled = false;
+      // widths for that length
+      const widths = variants
+        .filter(v=>v.length===L)
+        .map(v=>v.width)
+        .sort((a,b)=>a-b);
+      widths.forEach(w=>{
+        const o = document.createElement('option');
+        o.value = w;
+        o.textContent = `${w}"`;
+        widSel.appendChild(o);
+      });
+    }
+
+    function updatePriceAndCanvas() {
+      const L = parseInt(lenSel.value),
+            W = parseInt(widSel.value);
+      const variant = variants.find(v=>v.length===L && v.width===W);
+      priceDisplay.textContent = variant
+        ? `Price: $${variant.price.toFixed(2)}`
+        : '';
+      // now that you have L & W, you can:
+      //  • show the file-input
+      //  • call your redrawAll() but using L,W instead of number inputs
+      if (variant) {
+        document.getElementById('fileInputContainer').style.display = 'block';
+        // e.g. redrawAll(L, W);
+      }
+    }
+
+    // kick it off
+    initSelectors();
+  });
+    
       function redrawAll() {
         const wIn = parseFloat(widthInput.value);
         const hIn = parseFloat(heightInput.value);
