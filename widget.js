@@ -21,3 +21,11 @@ function svgTextToPngDataUrl(svgText, w, h, callback) {
   };
   img.src = url;
 }
+
+if (forcedW && forcedH && uploadedSvgText) {
+  svgTextToPngDataUrl(uploadedSvgText, forcedW, forcedH, (pngDataUrl) => {
+    // show it:
+    const imgEl = document.getElementById('staticPreview');
+    imgEl.src = pngDataUrl;
+  });
+}
