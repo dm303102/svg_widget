@@ -157,17 +157,27 @@
     // Populate Length selector with only valid price variants
     function initSelectors() {
       // Unique lengths and widths with price
+      const validVariants = variants.filter(v => v.price != null);
       const lengths = [...new Set(variants.filter(v => v.price != null).map(v => v.length))].sort((a,b)=>a-b);
       const widths = [...new Set(variants.filter(v => v.price != null).map(v => v.width))].sort((a,b)=>a-b);
 
       lenSel.innerHTML = '<option value="">–</option>';
-      const lengths = [...new Set(variants.filter(v=>v.price != null).map(v=>v.length))].sort((a,b)=>a-b);
       lengths.forEach(l=>{
         const opt = document.createElement('option');
         opt.value = l; opt.textContent = `${l}"`;
         lenSel.append(opt);
       });
       lenSel.disabled = false;
+
+      // populate width:
+      widSel.innerHTML = '<option value="">–</option>';
+      widths.forEach(w => {
+        const opt = document.createElement('option');
+        opt.value = w; opt.textContent = `${w}"`;
+        widSel.append(opt);
+      });
+      widSel.disabled = false;
+      
       lenSel.addEventListener('change', onLengthChange);
       widSel.addEventListener('change', updatePriceAndCanvas);
     }
