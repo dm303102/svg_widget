@@ -185,27 +185,16 @@
       }
       priceDisplay.textContent = '';
       fileInputContainer.style.display = 'none';
+        redrawCanvas();
     }
     function onWidthChange() {
       const L = +lengthSelect.value, W = +widthSelect.value;
       const v = variants.find(v=>v.length===L && v.width===W && v.price!=null);
       priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
       fileInputContainer.style.display = v ? 'block' : 'none';
+        redrawCanvas();
     }
-    initLength();
-    lengthSelect.addEventListener('change', onLengthChange);
-    widthSelect.addEventListener('change', onWidthChange);
-
-    widthSelect.addEventListener('change', () => {
-    onWidthChange();
-    redrawCanvas();
-    });
-
-    lengthSelect.addEventListener('change', () => {
-    onLengthChange();
-    redrawCanvas();
-   });
-    
+       
     // --- redraw ---
     function redrawCanvas() {
       const L = +lengthSelect.value, W = +widthSelect.value;
@@ -309,7 +298,11 @@
       redrawCanvas();
     }
 
-    // --- list events ---
+     // --- event wiring ---
+    initLength();
+    lengthSelect.addEventListener('change', onLengthChange);
+    widthSelect .addEventListener('change', onWidthChange);
+    
     svgList.addEventListener('click', e => {
       const li = e.target.closest('li');
       if (!li) return;
@@ -423,34 +416,27 @@
       });
     });
 
-    // --- forcerender, toggle & export ---
-    renderBtn.addEventListener('click', () => {
-      // force your selection logic to run
-      onLengthChange();
-      onWidthChange();
-    
-      // rebuild the SVG‐list (so selectedId borders, scales, etc. are up‐to‐date)
-      updateList();
-    
-      // finally draw
-      redrawCanvas();
-    });
+    renderBtn.addEventListener('click', redrawCanvas);
 
     toggleBtn.addEventListener('click', () => {
-      // swap values but keep options
-      const oldL = lengthSelect.value, oldW = widthSelect.value;
-     // swap them
+      // 1) stash the old values
+      const oldL = lengthSelect.value;
+      const oldW = widthSelect.value;
+    
+      // 2) swap them
       lengthSelect.value = oldW;
-      widthSelect.value  = oldL;
-
-      // now trigger their normal change‐handlers by dispatching real "change" events
       lengthSelect.dispatchEvent(new Event('change'));
+
+      widthSelect.value = oldL;
       widthSelect.dispatchEvent(new Event('change'));
-      
+    
+      // 3) re‐draw everything
+      //updateList();
       redrawCanvas();
-      
+    
       toggleBtn.textContent = toggleBtn.textContent.includes('Landscape')
-        ? 'Switch to Portrait' : 'Switch to Landscape';
+        ? 'Switch to Portrait'
+        : 'Switch to Landscape';
     });
 
     exportBtn.addEventListener('click', () => {
