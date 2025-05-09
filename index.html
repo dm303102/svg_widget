@@ -289,27 +289,6 @@ function finalizeCrop() {
   newImg.src = tmp.toDataURL();
 } 
       
-       function exportSVG() {
-      const L = +lengthSelect.value, W = +widthSelect.value;
-      if (!(L&&W)) return;
-      const wPx=L*DPI, hPx=W*DPI;
-      const xmlns='http://www.w3.org/2000/svg';
-      let out = `<svg xmlns="${xmlns}" width="${wPx+2*borderPx}" height="${hPx+2*borderPx}" viewBox="0 0 ${wPx+2*borderPx} ${hPx+2*borderPx}">`;
-      out += `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
-      //images.forEach(it=>{
-      for (const it of images) {
-        const dW=it.origW*it.fitScale*it.scalePercent;
-        const dH=it.origH*it.fitScale*it.scalePercent;
-        out += `<svg x="${it.x}" y="${it.y}" width="${dW}" height="${dH}" viewBox="0 0 ${it.origW} ${it.origH}" xmlns="${xmlns}">`;
-        out += new DOMParser().parseFromString(it.svgText,'image/svg+xml').documentElement.innerHTML;
-        out += `</svg>`;
-      }
-      out += `</svg>`;
-      const blob = new Blob([out],{type:'image/svg+xml'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download='canvas-export.svg'; a.click(); URL.revokeObjectURL(url);
-    }
-      
     // wire events    
     initLength();
     renderBtn.addEventListener('click', redrawCanvas);
@@ -388,6 +367,27 @@ canvas.addEventListener('mousemove', e => {
     dragging = cropping = false;
   })
 );
+
+        function exportSVG() {
+      const L = +lengthSelect.value, W = +widthSelect.value;
+      if (!(L&&W)) return;
+      const wPx=L*DPI, hPx=W*DPI;
+      const xmlns='http://www.w3.org/2000/svg';
+      let out = `<svg xmlns="${xmlns}" width="${wPx+2*borderPx}" height="${hPx+2*borderPx}" viewBox="0 0 ${wPx+2*borderPx} ${hPx+2*borderPx}">`;
+      out += `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
+      //images.forEach(it=>{
+      for (const it of images) {
+        const dW=it.origW*it.fitScale*it.scalePercent;
+        const dH=it.origH*it.fitScale*it.scalePercent;
+        out += `<svg x="${it.x}" y="${it.y}" width="${dW}" height="${dH}" viewBox="0 0 ${it.origW} ${it.origH}" xmlns="${xmlns}">`;
+        out += new DOMParser().parseFromString(it.svgText,'image/svg+xml').documentElement.innerHTML;
+        out += `</svg>`;
+      }
+      out += `</svg>`;
+      const blob = new Blob([out],{type:'image/svg+xml'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='canvas-export.svg'; a.click(); URL.revokeObjectURL(url);
+    }
     
       function handleFileLoad(e) {
       const L = +lengthSelect.value, W = +widthSelect.value;
