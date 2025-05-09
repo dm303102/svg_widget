@@ -1,29 +1,3 @@
-function onImageLoaded(ev) {
-  const img = ev.target;
-  const m   = img._meta;
-
-  // 1) build the new image‐record
-  const newImage = {
-    id:           m.id,
-    filename:     m.filename,
-    image:        img,
-    svgText:      m.txt,
-    origW:        m.origW,
-    origH:        m.origH,
-    fitScale:     m.fitScale,
-    scalePercent: 1,
-    rotation:     0,
-    x:            m.x,
-    y:            m.y,
-  };
-
-  // 2) replace the entire `images` array with a new one
-  images = [...images, newImage];
-
-  pushHistory();
-  selectImage(m.id);
-}  
-
 document.addEventListener('DOMContentLoaded', () => {
 // --- configuration & DOM refs ---
 const variants = [
@@ -199,6 +173,31 @@ canvas.addEventListener('mousemove', onMouseMove);
 );
 
 // --- functions ---
+function onImageLoaded(ev) {
+  const img = ev.target;
+  const m   = img._meta;
+
+  // 1) build the new image‐record
+  const newImage = {
+    id:           m.id,
+    filename:     m.filename,
+    image:        img,
+    svgText:      m.txt,
+    origW:        m.origW,
+    origH:        m.origH,
+    fitScale:     m.fitScale,
+    scalePercent: 1,
+    rotation:     0,
+    x:            m.x,
+    y:            m.y,
+  };
+
+  // 2) replace the entire `images` array with a new one
+  images = [...images, newImage];
+
+  pushHistory();
+  selectImage(m.id);
+}  
 
 function initLength() {
   const lengths = Array.from(new Set(variants.map(v => v.length))).sort((a,b)=>a-b);
