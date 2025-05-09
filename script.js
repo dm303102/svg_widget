@@ -123,11 +123,18 @@ widthSelect.addEventListener('change', onWidthChange);
 fileInput.addEventListener('change', handleFileLoad);
       
 function onSvgListClick(e) {
-   const li = e.target.closest('li');
+  const action = e.target.dataset.action;
+  const li     = e.target.closest('li');
+  const it     = images.find(img => img.id === li.dataset.id);
+
   if (!li) return;
   const id = li.dataset.id;
-  const it = images.find(img => img.id === id);
-  switch (e.target.dataset.action) {
+  if (action === 'scale') {
+    const pct = +e.target.value / 100;
+    it.scalePercent = pct;
+  }  
+  
+  switch (action) {
     case 'rotate':
       it.rotation += Math.PI/2;
       break;
@@ -400,7 +407,6 @@ function finalizeCrop() {
   const x0 = Math.min(startX,curX) - it.x;
   const y0 = Math.min(startY,curY) - it.y;
   const w0 = Math.abs(curX-startX), h0 = Math.abs(curY-startY);
-  const h0 = Math.abs(curY - startY);
   pushHistory();
       
   // draw the selected region into a temp canvas
