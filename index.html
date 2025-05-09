@@ -143,16 +143,14 @@
     let images = [], selectedId = null, history = [];
     let dragging = false, cropping = false, dragOffset = { x: 0, y: 0 },
       cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
+
+    initLength();
       
 function initLength() {
-  const lengths = Array.from(new Set(variants.map(v => v.length))).sort((a,b)=>a-b);
-  lengthSelect.innerHTML = '<option value="">–</option>';
-  lengths.forEach(l => {
-    const opt = document.createElement('option');
-    opt.value = l;
-    opt.textContent = `${l}"`;
-    lengthSelect.appendChild(opt);
-  });
+  const frag = document.createDocumentFragment();
+  frag.appendChild(new Option('–',''));
+  lengths.forEach(l => frag.appendChild(new Option(`${l}"`, l)));
+  lengthSelect.replaceChildren(frag);
   lengthSelect.disabled = false;
 }
 
@@ -186,7 +184,7 @@ function onLengthChange() {
       redrawCanvas();
     }
 
-    initLength();
+    
       
     function pushHistory() {
       history.push(images.map(item => ({ ...item })));
