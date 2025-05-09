@@ -458,15 +458,16 @@ function finalizeCrop() {
 
 function handleFileLoad(e) {
   const L = +lengthSelect.value, W = +widthSelect.value;
-  if ((L && W)) {
+  if (L && W) {
     const wPx = L * DPI, hPx = W * DPI;
-
-    // Loop normally, no .forEach
+    
+// Loop normally, no .forEach → no "});"
     for (const file of e.target.files) {
       readSvgFile(file, wPx, hPx);
     }
-  redrawCanvas();
-}
+    redrawCanvas();
+  }     ←── close the `if`
+}       ←── now closes the function
 
 function readSvgFile(file, wPx, hPx) {
   const reader = new FileReader();
