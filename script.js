@@ -479,6 +479,7 @@ function onSvgTextLoaded(ev) {
   // stash the rest on the image so we can read them in the callback
   img._meta = { id, filename: file.name, txt, origW, origH, fitScale, x, y };
 }
+});
 
 function onImageLoaded(ev) {
   const img    = ev.target;
