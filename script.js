@@ -88,6 +88,7 @@ const variants = [
       { length: 36, width: 12, price: 50.00 }
 ];
 
+const ROTATION_STEP = Math.PI / 2; // 90°
 const DPI = 96, borderPx = 4;
 const lengthSelect      = document.getElementById('lengthSelect');
 const widthSelect       = document.getElementById('widthSelect');
@@ -136,7 +137,7 @@ function onSvgListActionClick(e) {
   
   switch (action) {
     case 'rotate':
-      it.rotation += Math.PI/2;
+      it.rotation += ROTATION_STEP;
       break;
     case 'duplicate':
       const copy = { ...it, id: Date.now() + '_' + Math.random() };
@@ -283,6 +284,14 @@ function updateList() {
   }
 }
 
+function rotateSelected(by = ROTATION_STEP) {
+  const img = images.find(i => i.id === selectedId);
+  if (!img) return;
+  img.rotation += by;
+  pushHistory();
+  redrawCanvas();
+}
+      
 function selectImage(id) {
   selectedId = id;
   updateList();
