@@ -122,7 +122,7 @@ lengthSelect.addEventListener('change', onLengthChange);
 widthSelect.addEventListener('change', onWidthChange);
 fileInput.addEventListener('change', handleFileLoad);
       
-function onSvgListClick(e) {
+function onSvgListActionClick(e) {
   const action = e.target.dataset.action;
   const li     = e.target.closest('li');
   const it     = images.find(img => img.id === li.dataset.id);
@@ -150,16 +150,16 @@ function onSvgListClick(e) {
   pushHistory();
   selectImage(selectedId || images[0]?.id);
 }
-svgList.addEventListener('click', onSvgListClick);
+svgList.addEventListener('click', onSvgListActionClick);
 
-function onSvgListClick(e) {
+function onSvgListSelectClick(e) {
   const btn = e.target.closest('button, input[type=range]');
   if (btn) return;    // handled above
   const li = e.target.closest('li');
   if (!li) return;
   selectImage(li.dataset.id);
 }
-svgList.addEventListener('click', onSvgListClick);
+svgList.addEventListener('click', onSvgListSelectClick);
 
 // canvas dragging & cropping
 canvas.addEventListener('mousedown', onMouseDown);
