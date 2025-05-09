@@ -199,44 +199,50 @@ function redrawCanvas() {
 
 function updateList() {
   svgList.innerHTML = '';
-   images.forEach((it,i) => {
-        const li = document.createElement('li');
-        li.dataset.id = it.id;
-        if (it.id === selectedId) li.classList.add('selected');
+  for (const it of images) {
+    const li = document.createElement('li');
+    li.dataset.id = it.id;
+    if (it.id===selectedId) li.classList.add('selected');
+    const name = document.createElement('span');
+    name.className = 'filename';
+    name.textContent = it.filename;
 
-        const name = document.createElement('span');
-        name.className='filename';
-        name.textContent = it.filename||`SVG ${i+1}`;
+    // --- controls container ---
+    const ctr = document.createElement('div');
+    ctr.className = 'item-controls';
 
-        const ctr = document.createElement('div');
-        ctr.className='item-controls';
+    // rotate button
+    const rotateBtn = document.createElement('button');
+    rotateBtn.textContent = '⟳';
+    rotateBtn.title = 'Rotate 90°';
+    rotateBtn.dataset.action = 'rotate';
 
-        // granular scale
-        const sl = document.createElement('input');
-        sl.type='range'; sl.min=10; sl.max=200; sl.step=0.1;
-        sl.value = (it.scalePercent*100).toFixed(1);
-        sl.dataset.id = it.id;
+    // scale slider
+    const scaleInput = document.createElement('input');
+    scaleInput.type = 'range';
+    scaleInput.min = '50';
+    scaleInput.max = '200';
+    scaleInput.value = (it.scalePercent * 100).toFixed(0);
+    scaleInput.title = 'Scale %';
+    scaleInput.dataset.action = 'scale';
 
-        const cropBtn = document.createElement('button');
-        cropBtn.textContent='Crop'; cropBtn.dataset.id=it.id;
+    // duplicate button
+    const dupBtn = document.createElement('button');
+    dupBtn.textContent = '⎘';
+    dupBtn.title = 'Duplicate';
+    dupBtn.dataset.action = 'duplicate';
 
-        const dupBtn = document.createElement('button');
-        dupBtn.textContent='Duplicate'; dupBtn.dataset.id=it.id;
+    // delete button
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '✕';
+    delBtn.title = 'Delete';
+    delBtn.dataset.action = 'delete';
 
-        const rotL = document.createElement('button');
-        rotL.textContent='↺'; rotL.dataset.id=it.id;
-
-        const rotR = document.createElement('button');
-        rotR.textContent='↻'; rotR.dataset.id=it.id;
-
-        const delBtn = document.createElement('button');
-        delBtn.textContent='Delete'; delBtn.dataset.id=it.id;
-
-        ctr.append(sl, cropBtn, dupBtn, rotL, rotR, delBtn);
-        li.append(name, ctr);
-        svgList.append(li);
-      });
+    ctr.append(rotateBtn, scaleInput, dupBtn, delBtn);
+    li.append(name, ctr);
+    svgList.append(li);
   }
+}
 
 function selectImage(id) {
   selectedId = id;
