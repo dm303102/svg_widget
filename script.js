@@ -493,7 +493,7 @@ function onSvgTextLoaded(ev) {
 
   const img = new Image();
   // again, named instead of inline arrow:
-  img.addEventListener('load', onImageLoaded);
+  //img.addEventListener('load', onImageLoaded);
   img.src = URL.createObjectURL(new Blob([txt], { type: 'image/svg+xml' }));
 
   // stash the rest on the image so we can read them in the callback
