@@ -163,12 +163,8 @@ function onLengthChange() {
       .filter(v => v.length === L)
       .map(v => v.width)
       .sort((a,b)=>a-b);
-    widths.forEach(w => {
-      const opt = document.createElement('option');
-      opt.value = w;
-      opt.textContent = `${w}"`;
-      widthSelect.appendChild(opt);
-    });
+widths.forEach(w =>
+  widthSelect.add(new Option(`${w}"`, w)));
   }
   priceDisplay.textContent = '';
   fileInputContainer.style.display = 'none';
@@ -314,7 +310,8 @@ canvas.addEventListener('mousedown', e => {
     pushHistory();  // snapshot before move
   }
 });
-
+    });
+    
 // 2) MOUSE MOVE
 canvas.addEventListener('mousemove', e => {
   const { x, y } = toCanvasCoords(e);
