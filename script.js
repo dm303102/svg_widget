@@ -1,3 +1,4 @@
+document.addEventListener('DOMContentLoaded', () => {
 // --- configuration & DOM refs ---
 const variants = [
       { length: 4, width: 4, price: 12.00 },
@@ -361,16 +362,33 @@ function finalizeCrop() {
   const x0 = Math.min(startX,curX) - it.x;
   const y0 = Math.min(startY,curY) - it.y;
   const w0 = Math.abs(curX-startX), h0 = Math.abs(curY-startY);
+  const h0 = Math.abs(curY - startY);
   pushHistory();
+      
+  // draw the selected region into a temp canvas
   const tmp = document.createElement('canvas');
   tmp.width = w0; tmp.height = h0;
   const tctx = tmp.getContext('2d');
   tctx.drawImage(it.image, x0,y0,w0,h0, 0,0,w0,h0);
+
+  // replace image with the cropped one    
   const newImg = new Image();
   newImg.onload = () => {
     it.image = newImg;
     it.origW = w0; it.origH = h0;
     it.fitScale = 1; it.scalePercent = 1;
+
+      // --- NEW: update svgText for export ---
+      // we serialize the original SVG with a new viewBox to reflect the crop
+      const parser = new DOMParser();
+      const doc   = parser.parseFromString(it.svgText, 'image/svg+xml');
+      const svgEl = doc.documentElement;
+      svgEl.setAttribute('viewBox', `${x0} ${y0} ${w0} ${h0}`);
+      svgEl.setAttribute('width', w0);
+      svgEl.setAttribute('height', h0);
+      it.svgText = new XMLSerializer().serializeToString(svgEl);      
+
+    // re-center in canvas
     it.x = borderPx + (canvas.width/2 - w0/2);
     it.y = borderPx + (canvas.height/2 - h0/2);
     updateList();
@@ -378,3 +396,4 @@ function finalizeCrop() {
   };
   newImg.src = tmp.toDataURL();
 }
+});
