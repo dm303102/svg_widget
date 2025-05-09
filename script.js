@@ -118,9 +118,36 @@ undoBtn.addEventListener('click', () => {
 lengthSelect.addEventListener('change', onLengthChange);
 widthSelect.addEventListener('change', onWidthChange);
 fileInput.addEventListener('change', handleFileLoad);
+      
 svgList.addEventListener('click', e =>
-  selectImage(e.target.closest('li').dataset.id)
-);
+   const li = e.target.closest('li');
+  if (!li) return;
+  const id = li.dataset.id;
+  const it = images.find(img => img.id === id);
+  switch (e.target.dataset.action) {
+    case 'rotate':
+      it.rotation += Math.PI/2;
+      break;
+    case 'duplicate':
+      const copy = { ...it, id: Date.now() + '_' + Math.random() };
+      images.push(copy);
+      break;
+    case 'delete':
+      images = images.filter(img => img.id !== id);
+      if (selectedId === id) selectedId = images[0]?.id || null;
+      break;
+  }
+  pushHistory();
+  selectImage(selectedId || images[0]?.id);
+});
+
+svgList.addEventListener('click', e => {
+  const btn = e.target.closest('button, input[type=range]');
+  if (btn) return;    // handled above
+  const li = e.target.closest('li');
+  if (!li) return;
+  selectImage(li.dataset.id);
+});
 
 // canvas dragging & cropping
 canvas.addEventListener('mousedown', onMouseDown);
