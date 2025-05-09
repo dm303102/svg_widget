@@ -143,8 +143,6 @@
     let images = [], selectedId = null, history = [];
     let dragging = false, cropping = false, dragOffset = { x: 0, y: 0 },
       cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
-
-    initLength();
       
 function initLength() {
   const frag = document.createDocumentFragment();
@@ -233,6 +231,7 @@ function onWidthChange() {
 
     
       // wire events    
+    initLength();
     renderBtn.addEventListener('click', redrawCanvas);
     exportBtn.addEventListener('click', exportSVG);
     fileInput.addEventListener('change', handleFileLoad);    
