@@ -1,4 +1,4 @@
-function onImageLoaded(ev) {
+img.addEventListener('load', function onImageLoaded(ev) {
   const img    = ev.target;
   const m      = img._meta;
   images.push({
@@ -16,7 +16,7 @@ function onImageLoaded(ev) {
   });
   pushHistory();
   selectImage(m.id);
-}
+});
 
 document.addEventListener('DOMContentLoaded', () => {
 // --- configuration & DOM refs ---
