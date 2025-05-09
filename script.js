@@ -499,4 +499,3 @@ function onImageLoaded(ev) {
   pushHistory();
   selectImage(m.id);
 }
-});
