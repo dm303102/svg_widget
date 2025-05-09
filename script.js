@@ -286,8 +286,7 @@ function updateList() {
     delBtn.title = 'Delete';
     delBtn.dataset.action = 'delete';
 
-    ctr.append(rotateBtn, scaleInput, dupBtn, delBtn);
-    ctr.append(rotateLeftBtn, rotateRightBtn);
+    ctr.append(rotateLeftBtn, rotateRightBtn, scaleInput, dupBtn, delBtn);
     li.append(name, ctr);
     svgList.append(li);
   }
