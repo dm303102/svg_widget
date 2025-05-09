@@ -1,3 +1,23 @@
+function onImageLoaded(ev) {
+  const img    = ev.target;
+  const m      = img._meta;
+  images.push({
+    id:          m.id,
+    filename:    m.filename,
+    image:       img,
+    svgText:     m.txt,
+    origW:       m.origW,
+    origH:       m.origH,
+    fitScale:    m.fitScale,
+    scalePercent: 1,
+    rotation:    0,
+    x:           m.x,
+    y:           m.y
+  });
+  pushHistory();
+  selectImage(m.id);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 // --- configuration & DOM refs ---
 const variants = [
@@ -479,24 +499,6 @@ function onSvgTextLoaded(ev) {
   // stash the rest on the image so we can read them in the callback
   img._meta = { id, filename: file.name, txt, origW, origH, fitScale, x, y };
 }
-});
 
-function onImageLoaded(ev) {
-  const img    = ev.target;
-  const m      = img._meta;
-  images.push({
-    id:          m.id,
-    filename:    m.filename,
-    image:       img,
-    svgText:     m.txt,
-    origW:       m.origW,
-    origH:       m.origH,
-    fitScale:    m.fitScale,
-    scalePercent: 1,
-    rotation:    0,
-    x:           m.x,
-    y:           m.y
-  });
-  pushHistory();
-  selectImage(m.id);
-}
+img.addEventListener('load', onImageLoaded);
+});
