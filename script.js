@@ -172,6 +172,23 @@ canvas.addEventListener('mousemove', onMouseMove);
   canvas.addEventListener(evt, onMouseUp)
 );
 
+const cropBtn = document.getElementById('cropBtn');
+
+  // toggle crop‑mode on/off
+  cropBtn.addEventListener('click', () => {
+    cropping = !cropping;
+    // give user visual feedback:
+    cropBtn.textContent = cropping ? 'Cancel Crop' : 'Crop';
+    canvas.style.cursor = cropping ? 'crosshair' : 'default';
+  });
+
+  // canvas mouse handlers (make sure these run _after_ that toggle above)
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  ['mouseup','mouseleave'].forEach(evt =>
+    canvas.addEventListener(evt, onMouseUp)
+  );
+      
 // --- functions ---
 function onImageLoaded(ev) {
   const img = ev.target;
@@ -332,22 +349,55 @@ function selectImage(id) {
 }
 
 function exportSVG() {
-  const L = +lengthSelect.value, W = +widthSelect.value;
+ const L = +lengthSelect.value, W = +widthSelect.value;
   if (!(L && W)) return;
-  const wPx = L*DPI, hPx = W*DPI;
+  const wPx   = L * DPI, hPx = W * DPI;
   const xmlns = 'http://www.w3.org/2000/svg';
+
   let out = `<svg xmlns="${xmlns}" width="${wPx+2*borderPx}" height="${hPx+2*borderPx}" viewBox="0 0 ${wPx+2*borderPx} ${hPx+2*borderPx}">`
           + `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
+
   for (const it of images) {
-    const dW = it.origW*it.fitScale*it.scalePercent;
-    const dH = it.origH*it.fitScale*it.scalePercent;
-    out += `<svg x="${it.x}" y="${it.y}" width="${dW}" height="${dH}" viewBox="0 0 ${it.origW} ${it.origH}" xmlns="${xmlns}">`
-        + new DOMParser().parseFromString(it.svgText,'image/svg+xml').documentElement.innerHTML
-        + `</svg>`;
+    // final display size
+    const dW = it.origW * it.fitScale * it.scalePercent;
+    const dH = it.origH * it.fitScale * it.scalePercent;
+
+    // center about which we rotate
+    const cx  = it.x + dW/2;
+    const cy  = it.y + dH/2;
+
+    // convert radians → degrees
+    const angle = (it.rotation * 180 / Math.PI).toFixed(2);
+
+    // grab the inner SVG payload
+    const inner = new DOMParser()
+      .parseFromString(it.svgText, 'image/svg+xml')
+      .documentElement.innerHTML;
+
+    // wrap in a <g> that:
+    //  1) translates to the canvas position of its center
+    //  2) rotates by the saved angle
+    //  3) translates back by half its width/height
+    out += `
+      <g transform="
+        translate(${cx},${cy})
+        rotate(${angle})
+        translate(${-dW/2},${-dH/2})
+      ">
+        <svg
+          width="${dW}"
+          height="${dH}"
+          viewBox="0 0 ${it.origW} ${it.origH}"
+          xmlns="${xmlns}">
+          ${inner}
+        </svg>
+      </g>
+    `;
   }
+
   out += `</svg>`;
-  const mime = { type: 'image/svg+xml' };
-  const blob = new Blob([out], mime);
+
+  const blob = new Blob([out], { type: 'image/svg+xml' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = 'canvas-export.svg'; a.click();
@@ -403,6 +453,7 @@ function onMouseUp() {
   }
   dragging = cropping = false;
 }
+      
 function drawCropOverlay() {
   const { startX, startY, curX, curY } = cropStart;
   const x0 = Math.min(startX,curX), y0 = Math.min(startY,curY);
