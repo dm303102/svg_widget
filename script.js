@@ -198,17 +198,44 @@ function redrawCanvas() {
 
 function updateList() {
   svgList.innerHTML = '';
-  for (const it of images) {
-    const li = document.createElement('li');
-    li.dataset.id = it.id;
-    if (it.id === selectedId) li.classList.add('selected');
-    const name = Object.assign(document.createElement('span'), { className:'filename', textContent: it.filename });
-    const ctr  = document.createElement('div'); ctr.className = 'item-controls';
-    // add your buttons / sliders beneath...
-    li.append(name, ctr);
-    svgList.append(li);
+   images.forEach((it,i) => {
+        const li = document.createElement('li');
+        li.dataset.id = it.id;
+        if (it.id === selectedId) li.classList.add('selected');
+
+        const name = document.createElement('span');
+        name.className='filename';
+        name.textContent = it.filename||`SVG ${i+1}`;
+
+        const ctr = document.createElement('div');
+        ctr.className='item-controls';
+
+        // granular scale
+        const sl = document.createElement('input');
+        sl.type='range'; sl.min=10; sl.max=200; sl.step=0.1;
+        sl.value = (it.scalePercent*100).toFixed(1);
+        sl.dataset.id = it.id;
+
+        const cropBtn = document.createElement('button');
+        cropBtn.textContent='Crop'; cropBtn.dataset.id=it.id;
+
+        const dupBtn = document.createElement('button');
+        dupBtn.textContent='Duplicate'; dupBtn.dataset.id=it.id;
+
+        const rotL = document.createElement('button');
+        rotL.textContent='↺'; rotL.dataset.id=it.id;
+
+        const rotR = document.createElement('button');
+        rotR.textContent='↻'; rotR.dataset.id=it.id;
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent='Delete'; delBtn.dataset.id=it.id;
+
+        ctr.append(sl, cropBtn, dupBtn, rotL, rotR, delBtn);
+        li.append(name, ctr);
+        svgList.append(li);
+      });
   }
-}
 
 function selectImage(id) {
   selectedId = id;
