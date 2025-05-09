@@ -490,7 +490,6 @@ function onSvgTextLoaded(ev) {
   const x        = borderPx + (wPx - dW)/2;
   const y        = borderPx + (hPx - dH)/2;
   const id       = Date.now() + '_' + Math.random();
-
   const img = new Image();
   // again, named instead of inline arrow:
   //img.addEventListener('load', onImageLoaded);
