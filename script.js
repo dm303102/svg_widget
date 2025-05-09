@@ -412,33 +412,73 @@ function finalizeCrop() {
   };
   newImg.src = tmp.toDataURL();
 }
-});
 
 function handleFileLoad(e) {
   const L = +lengthSelect.value, W = +widthSelect.value;
   if (!(L && W)) return;
-  const wPx = L*DPI, hPx = W*DPI;
-  Array.from(e.target.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const txt = ev.target.result;
-      const doc = new DOMParser().parseFromString(txt,'image/svg+xml');
-      const svgEl = doc.documentElement;
-      const origW = parseFloat(svgEl.getAttribute('width')) || parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
-      const origH = parseFloat(svgEl.getAttribute('height'))|| parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
-      const fitScale = Math.min(wPx/origW, hPx/origH);
-      const dW = origW*fitScale, dH = origH*fitScale;
-      const x = borderPx + (wPx-dW)/2, y = borderPx + (hPx-dH)/2;
-      const id = Date.now() + '_' + Math.random();
-      const img = new Image();
-      img.onload = () => {
-        images.push({ id, filename:file.name, image:img, svgText:txt,
-                      origW, origH, fitScale, scalePercent:1, rotation:0, x, y });
-        pushHistory();
-        selectImage(id);
-      };
-      img.src = URL.createObjectURL(new Blob([txt], { type:'image/svg+xml' }));
-    };
-    reader.readAsText(file);
-  });
+  const wPx = L * DPI, hPx = W * DPI;
+
+  // Loop normally, no .forEach → no "});"
+  for (const file of e.target.files) {
+    readSvgFile(file, wPx, hPx);
+  }
 }
+
+function readSvgFile(file, wPx, hPx) {
+  const reader = new FileReader();
+  // named callback instead of reader.onload = ev => { … };
+  reader.addEventListener('load', onSvgTextLoaded);
+  reader.readAsText(file);
+
+  // closure data via properties on the reader (or capture via a WeakMap)
+  reader._file = file;
+  reader._wPx  = wPx;
+  reader._hPx  = hPx;
+}
+
+function onSvgTextLoaded(ev) {
+  const reader = ev.target;
+  const file   = reader._file;
+  const wPx    = reader._wPx;
+  const hPx    = reader._hPx;
+  const txt    = ev.target.result;
+
+  const doc  = new DOMParser().parseFromString(txt, 'image/svg+xml');
+  const svgEl = doc.documentElement;
+  const origW = parseFloat(svgEl.getAttribute('width'))  || parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
+  const origH = parseFloat(svgEl.getAttribute('height')) || parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
+  const fitScale = Math.min(wPx/origW, hPx/origH);
+  const dW       = origW * fitScale, dH = origH * fitScale;
+  const x        = borderPx + (wPx - dW)/2;
+  const y        = borderPx + (hPx - dH)/2;
+  const id       = Date.now() + '_' + Math.random();
+
+  const img = new Image();
+  // again, named instead of inline arrow:
+  img.addEventListener('load', onImageLoaded);
+  img.src = URL.createObjectURL(new Blob([txt], { type: 'image/svg+xml' }));
+
+  // stash the rest on the image so we can read them in the callback
+  img._meta = { id, filename: file.name, txt, origW, origH, fitScale, x, y };
+}
+
+function onImageLoaded(ev) {
+  const img    = ev.target;
+  const m      = img._meta;
+  images.push({
+    id:          m.id,
+    filename:    m.filename,
+    image:       img,
+    svgText:     m.txt,
+    origW:       m.origW,
+    origH:       m.origH,
+    fitScale:    m.fitScale,
+    scalePercent: 1,
+    rotation:    0,
+    x:           m.x,
+    y:           m.y
+  });
+  pushHistory();
+  selectImage(m.id);
+}
+});
