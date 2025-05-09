@@ -466,8 +466,8 @@ function handleFileLoad(e) {
       readSvgFile(file, wPx, hPx);
     }
     redrawCanvas();
-  }     ←── close the `if`
-}       ←── now closes the function
+  }
+}
 
 function readSvgFile(file, wPx, hPx) {
   const reader = new FileReader();
