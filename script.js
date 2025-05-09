@@ -252,10 +252,15 @@ function updateList() {
     ctr.className = 'item-controls';
 
     // rotate button
-    const rotateBtn = document.createElement('button');
-    rotateBtn.textContent = '⟳';
-    rotateBtn.title = 'Rotate 90°';
-    rotateBtn.dataset.action = 'rotate';
+      const rotateLeftBtn = document.createElement('button');
+      rotateLeftBtn.textContent   = '⟲';
+      rotateLeftBtn.title         = 'Rotate Left 15°';
+      rotateLeftBtn.dataset.action = 'rotate-left';
+      
+      const rotateRightBtn = document.createElement('button');
+      rotateRightBtn.textContent   = '⟳';
+      rotateRightBtn.title         = 'Rotate Right 15°';
+      rotateRightBtn.dataset.action = 'rotate-right';
 
     // scale slider
     const scaleInput = document.createElement('input');
@@ -279,6 +284,7 @@ function updateList() {
     delBtn.dataset.action = 'delete';
 
     ctr.append(rotateBtn, scaleInput, dupBtn, delBtn);
+    ctr.append(rotateLeftBtn, rotateRightBtn);
     li.append(name, ctr);
     svgList.append(li);
   }
