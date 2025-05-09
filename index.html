@@ -310,7 +310,6 @@ canvas.addEventListener('mousedown', e => {
     pushHistory();  // snapshot before move
   }
 });
-    });
     
 // 2) MOUSE MOVE
 canvas.addEventListener('mousemove', e => {
@@ -411,7 +410,8 @@ function finalizeCrop() {
     redrawCanvas();
   };
   newImg.src = tmp.toDataURL();
-}    
+} 
+    });
   </script>
 </body>
 </html>
