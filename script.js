@@ -136,7 +136,10 @@ function onSvgListActionClick(e) {
   }  
   
   switch (action) {
-    case 'rotate':
+    case 'rotate-left':
+      it.rotation -= ROTATION_STEP;
+      break;
+    case 'rotate-right':
       it.rotation += ROTATION_STEP;
       break;
     case 'duplicate':
