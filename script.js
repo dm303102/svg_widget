@@ -110,16 +110,19 @@ let cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
 initLength();
 renderBtn.addEventListener('click', redrawCanvas);
 exportBtn.addEventListener('click', exportSVG);
-undoBtn.addEventListener('click', () => {
+      
+function onUndoBtnClick() {
   if (!history.length) return;
   images = history.pop();
   selectImage(images[0]?.id);
-});
+}
+undoBtn.addEventListener('click', onUndoBtnClick);
+                         
 lengthSelect.addEventListener('change', onLengthChange);
 widthSelect.addEventListener('change', onWidthChange);
 fileInput.addEventListener('change', handleFileLoad);
       
-svgList.addEventListener('click', e =>
+function onSvgListClick(e) {
    const li = e.target.closest('li');
   if (!li) return;
   const id = li.dataset.id;
@@ -139,15 +142,17 @@ svgList.addEventListener('click', e =>
   }
   pushHistory();
   selectImage(selectedId || images[0]?.id);
-});
+}
+svgList.addEventListener('click', onSvgListClick);
 
-svgList.addEventListener('click', e => {
+function onSvgListClick(e) {
   const btn = e.target.closest('button, input[type=range]');
   if (btn) return;    // handled above
   const li = e.target.closest('li');
   if (!li) return;
   selectImage(li.dataset.id);
-});
+}
+svgList.addEventListener('click', onSvgListClick);
 
 // canvas dragging & cropping
 canvas.addEventListener('mousedown', onMouseDown);
