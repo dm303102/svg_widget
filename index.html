@@ -175,21 +175,14 @@ function onLengthChange() {
   redrawCanvas();
 }
 
-    function onWidthChange() {
-      const L = +lengthSelect.value;
-      const W = +widthSelect.value;
-      const v = variants.find(x=>x.length===L&&x.width===W);
-      priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
-      fileInputContainer.style.display = v ? 'block' : 'none';
-      redrawCanvas();
-    }
-
-    
-      
-    function pushHistory() {
-      history.push(images.map(item => ({ ...item })));
-      if (history.length > 50) history.shift();
-    }
+function onWidthChange() {
+  const L = +lengthSelect.value;
+  const W = +widthSelect.value;
+  const v = variants.find(x=>x.length===L&&x.width===W);
+  priceDisplay.textContent = v ? `Price: $${v.price.toFixed(2)}` : '';
+  fileInputContainer.style.display = v ? 'block' : 'none';
+  redrawCanvas();
+}
 
     function redrawCanvas() {
       const L = +lengthSelect.value, W = +widthSelect.value;
@@ -234,6 +227,11 @@ function onLengthChange() {
 
     function selectImage(id) {
       selectedId = id; updateList(); redrawCanvas();
+    }
+
+    function pushHistory() {
+      history.push(images.map(item => ({ ...item })));
+      if (history.length > 50) history.shift();
     }
 
     function handleFileLoad(e) {
