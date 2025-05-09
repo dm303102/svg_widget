@@ -88,7 +88,7 @@ const variants = [
       { length: 36, width: 12, price: 50.00 }
 ];
 
-const ROTATION_STEP = Math.PI / 2; // 90°
+const ROTATION_STEP = Math.PI / 12; // 15°
 const DPI = 96, borderPx = 4;
 const lengthSelect      = document.getElementById('lengthSelect');
 const widthSelect       = document.getElementById('widthSelect');
