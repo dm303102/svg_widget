@@ -289,35 +289,6 @@ function selectImage(id) {
   redrawCanvas();
 }
 
-function handleFileLoad(e) {
-  const L = +lengthSelect.value, W = +widthSelect.value;
-  if (!(L && W)) return;
-  const wPx = L*DPI, hPx = W*DPI;
-  Array.from(e.target.files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const txt = ev.target.result;
-      const doc = new DOMParser().parseFromString(txt,'image/svg+xml');
-      const svgEl = doc.documentElement;
-      const origW = parseFloat(svgEl.getAttribute('width')) || parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
-      const origH = parseFloat(svgEl.getAttribute('height'))|| parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
-      const fitScale = Math.min(wPx/origW, hPx/origH);
-      const dW = origW*fitScale, dH = origH*fitScale;
-      const x = borderPx + (wPx-dW)/2, y = borderPx + (hPx-dH)/2;
-      const id = Date.now() + '_' + Math.random();
-      const img = new Image();
-      img.onload = () => {
-        images.push({ id, filename:file.name, image:img, svgText:txt,
-                      origW, origH, fitScale, scalePercent:1, rotation:0, x, y });
-        pushHistory();
-        selectImage(id);
-      };
-      img.src = URL.createObjectURL(new Blob([txt], { type:'image/svg+xml' }));
-    };
-    reader.readAsText(file);
-  });
-}
-
 function exportSVG() {
   const L = +lengthSelect.value, W = +widthSelect.value;
   if (!(L && W)) return;
@@ -333,7 +304,8 @@ function exportSVG() {
         + `</svg>`;
   }
   out += `</svg>`;
-  const blob = new Blob([out], { type:'image/svg+xml' });
+  const mime = { type: 'image/svg+xml' };
+  const blob = new Blob([out], mime);
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = 'canvas-export.svg'; a.click();
@@ -441,3 +413,32 @@ function finalizeCrop() {
   newImg.src = tmp.toDataURL();
 }
 });
+
+function handleFileLoad(e) {
+  const L = +lengthSelect.value, W = +widthSelect.value;
+  if (!(L && W)) return;
+  const wPx = L*DPI, hPx = W*DPI;
+  Array.from(e.target.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const txt = ev.target.result;
+      const doc = new DOMParser().parseFromString(txt,'image/svg+xml');
+      const svgEl = doc.documentElement;
+      const origW = parseFloat(svgEl.getAttribute('width')) || parseFloat(svgEl.getAttribute('viewBox').split(' ')[2]);
+      const origH = parseFloat(svgEl.getAttribute('height'))|| parseFloat(svgEl.getAttribute('viewBox').split(' ')[3]);
+      const fitScale = Math.min(wPx/origW, hPx/origH);
+      const dW = origW*fitScale, dH = origH*fitScale;
+      const x = borderPx + (wPx-dW)/2, y = borderPx + (hPx-dH)/2;
+      const id = Date.now() + '_' + Math.random();
+      const img = new Image();
+      img.onload = () => {
+        images.push({ id, filename:file.name, image:img, svgText:txt,
+                      origW, origH, fitScale, scalePercent:1, rotation:0, x, y });
+        pushHistory();
+        selectImage(id);
+      };
+      img.src = URL.createObjectURL(new Blob([txt], { type:'image/svg+xml' }));
+    };
+    reader.readAsText(file);
+  });
+}
