@@ -266,6 +266,20 @@ function redrawCanvas() {
     ctx.textAlign = 'right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
   }
 
+if (it.id === selectedId) {
+  ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(it.rotation);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth   = 2;
+    ctx.strokeRect(-dW/2, -dH/2, dW, dH);
+
+    // ← new: draw a 10×10px handle at the top‑left
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(-dW/2 - 5, -dH/2 - 5, 10, 10);
+  ctx.restore();
+}
+      
   for (const it of images) {
     const dW = it.origW * it.fitScale * it.scalePercent;
     const dH = it.origH * it.fitScale * it.scalePercent;
