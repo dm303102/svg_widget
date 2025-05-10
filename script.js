@@ -109,6 +109,19 @@ let cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
 
 // --- initial setup ---
 initLength();
+
+//Listener functions
+canvas.addEventListener('click', e => {
+  const { x, y } = toCanvasCoords(e);
+  // search from topmost to bottom
+  for (let i = images.length - 1; i >= 0; i--) {
+    if (hitTest(images[i], x, y)) {
+      selectImage(images[i].id);
+      break;
+    }
+  }
+});
+      
 renderBtn.addEventListener('click', redrawCanvas);
 exportBtn.addEventListener('click', exportSVG);
       
@@ -122,7 +135,7 @@ undoBtn.addEventListener('click', onUndoBtnClick);
 lengthSelect.addEventListener('change', onLengthChange);
 widthSelect.addEventListener('change', onWidthChange);
 fileInput.addEventListener('change', handleFileLoad);
-      
+
 function onSvgListActionClick(e) {
   const action = e.target.dataset.action;
   const li     = e.target.closest('li');
@@ -430,19 +443,30 @@ function hitTest(img, x, y) {
 }
 function onMouseDown(e) {
   const { x, y } = toCanvasCoords(e);
+      
   if (cropping) {
     cropStart.startX = cropStart.curX = x;
     cropStart.startY = cropStart.curY = y;
     return;
   }
-  const sel = images.find(img => img.id === selectedId);
-  if (sel && hitTest(sel, x, y)) {
-    dragging = true;
-    dragOffset.x = x - sel.x;
-    dragOffset.y = y - sel.y;
-    pushHistory();
+
+  // if you click *any* image (not just the already‑selected), select & begin drag
+  for (let i = images.length - 1; i >= 0; i--) {
+    const img = images[i];
+    if (hitTest(img, x, y)) {
+      if (img.id !== selectedId) {
+        selectImage(img.id);
+      }
+      // now start dragging
+      dragging = true;
+      dragOffset.x = x - img.x;
+      dragOffset.y = y - img.y;
+      pushHistory();
+      return;
   }
+ }
 }
+      
 function onMouseMove(e) {
   const { x, y } = toCanvasCoords(e);
   if (cropping && cropStart.startX != null) {
