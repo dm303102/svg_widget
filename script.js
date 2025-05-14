@@ -165,18 +165,18 @@ function onSvgListActionClick(e) {
 
   if (!li) return;
   const id = li.dataset.id;
-  if (action === 'scale') {
+   if (action === 'scale') {
+    // set scalePercent to slider%
     const pct = +e.target.value / 100;
     const img = images.find(i => i.id === selectedId);
     if (!img) return;
-      
-      let minS = getMinScalePercent(img);
-      img.scalePercent = clamp(
-        img.scalePercent + 0.1,  // delta (or –0.1 for zoom out)
-        minS,                    // never below the cutter’s limit
-        MAX_SCALE                // never above 10×
-      );
-  }  
+    const minS = getMinScalePercent(img);
+    img.scalePercent = clamp(pct, minS, MAX_SCALE);
+    pushHistory();
+    redrawCanvas();
+    return;  // don’t fall through to switch
+   }
+
   
   switch (action) {
     case 'rotate-left':
@@ -198,6 +198,7 @@ function onSvgListActionClick(e) {
   selectImage(selectedId || images[0]?.id);
 }
 svgList.addEventListener('click', onSvgListActionClick);
+svgList.addEventListener('input', onSvgListActionClick);
 
 function onSvgListSelectClick(e) {
   const btn = e.target.closest('button, input[type=range]');
