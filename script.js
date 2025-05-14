@@ -178,17 +178,10 @@ function onSvgListSelectClick(e) {
 }
 svgList.addEventListener('click', onSvgListSelectClick);
 
-// canvas dragging & cropping
-canvas.addEventListener('mousedown', onMouseDown);
-canvas.addEventListener('mousemove', onMouseMove);
-['mouseup','mouseleave'].forEach(evt =>
-  canvas.addEventListener(evt, onMouseUp)
-);
-
 const cropBtn = document.getElementById('cropBtn');
 
-  // toggle crop‑mode on/off
-   function onCropBtnClick() {
+// toggle crop‑mode on/off
+function onCropBtnClick() {
     cropping = !cropping;
     // give user visual feedback:
     cropBtn.textContent = cropping ? 'Cancel Crop' : 'Crop';
@@ -197,6 +190,7 @@ const cropBtn = document.getElementById('cropBtn');
 
   cropBtn.addEventListener('click', onCropBtnClick);
   // canvas mouse handlers (make sure these run _after_ that toggle above)
+  // canvas dragging & cropping
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mousemove', onMouseMove);
   ['mouseup','mouseleave'].forEach(evt =>
@@ -279,20 +273,6 @@ function redrawCanvas() {
     ctx.textAlign = 'left';  ctx.fillText(`L: ${L}"`,             borderPx+4, canvas.height-4);
     ctx.textAlign = 'right'; ctx.fillText(`W: ${W}"`, canvas.width-borderPx-4, canvas.height-4);
   }
-
-if (it.id === selectedId) {
-  ctx.save();
-    ctx.translate(cx,cy);
-    ctx.rotate(it.rotation);
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth   = 2;
-    ctx.strokeRect(-dW/2, -dH/2, dW, dH);
-
-    // ← new: draw a 10×10px handle at the top‑left
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(-dW/2 - 5, -dH/2 - 5, 10, 10);
-  ctx.restore();
-}
       
   for (const it of images) {
     const dW = it.origW * it.fitScale * it.scalePercent;
@@ -305,9 +285,12 @@ if (it.id === selectedId) {
       ctx.save(); ctx.translate(cx,cy); ctx.rotate(it.rotation);
       ctx.strokeStyle='red'; ctx.lineWidth=2;
       ctx.strokeRect(-dW/2, -dH/2, dW, dH);
+      // ← new: draw a 10×10px handle at the top‑left
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(-dW/2 - 5, -dH/2 - 5, 10, 10);
       ctx.restore();
-    }
-  }
+     }
+   }
 }
 
 function updateList() {
