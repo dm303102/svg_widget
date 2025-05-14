@@ -481,6 +481,7 @@ function updateList() {
         fontSel.appendChild(o);
         }
       fontSel.addEventListener('change', ev => {
+      it.fontFamily = ev.target.value;
       WebFont.load({
         google: { families: [ it.fontFamily ] },
         active: () => {
