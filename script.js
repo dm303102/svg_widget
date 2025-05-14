@@ -119,15 +119,15 @@ initLength();
 
 //Listener functions
 function toggleCrop() {
-  isCropping = !isCropping;
+  cropping = !cropping;
   cropStart  = null;              // ← clear any pending crop
-  cropBtn.textContent = isCropping ? 'Cancel Cropping' : 'Crop';
-  canvas.style.cursor  = isCropping ? 'crosshair' : 'default';
+  cropBtn.textContent = cropping ? 'Cancel Cropping' : 'Crop';
+  canvas.style.cursor  = cropping ? 'crosshair' : 'default';
   redrawCanvas();
 }
   
 function onCanvasClick(e) {
-  const { x, y } = toCanvasCoords(e);
+  const { x, y } = getMousePos(e);
   // search from topmost to bottom
   for (let i = images.length - 1; i >= 0; i--) {
     if (hitTest(images[i], x, y)) {
@@ -431,10 +431,6 @@ function exportSVG() {
 }
 
 // --- canvas dragging & cropping helpers ---
-function toCanvasCoords(e) {
-  const r = canvas.getBoundingClientRect();
-  return { x: e.clientX - r.left, y: e.clientY - r.top };
-}
 function hitTest(img, x, y) {
   // full drawn size
   const dW = img.origW * img.fitScale * img.scalePercent;
@@ -461,7 +457,7 @@ function hitTest(img, x, y) {
 function onMouseDown(e) {
   const { x, y } = getMousePos(e);
     
-  if (isCropping) {
+  if (cropping) {
     cropStart = { startX: x, startY: y, curX: x, curY: y };
   } else {
     const it = images.find(img => hitTest(img, x, y));
@@ -490,8 +486,8 @@ function onMouseDown(e) {
 }
       
 function onMouseMove(e) {
-  const { x, y } = toCanvasCoords(e);
-  if (cropping && cropStart.startX != null) {
+  const { x, y } = getMousePos(e);
+  if (cropping && cropStart) {
     cropStart.curX = x;
     cropStart.curY = y;
     redrawCanvas();
@@ -506,7 +502,7 @@ function onMouseMove(e) {
   }
 }
 function onMouseUp() {
-  if (isCropping && cropStart) {
+  if (cropping && cropStart) {
     finalizeCrop();
     cropStart = null;
   }
