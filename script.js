@@ -576,7 +576,7 @@ function generateText() {
   if (!text) return;
 
   const font     = fontSelect.value;
-  const fontSize = 48;
+  const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10) || 48;
   // measure width via offscreen canvas
   const meas = document.createElement('canvas').getContext('2d');
   meas.font = `${fontSize}px ${font}`;
