@@ -500,11 +500,11 @@ function onMouseUp() {
     updateList();
     redrawCanvas();
   }
+  dragging = false;
   if (cropping && cropStart) {
     finalizeCrop();
     cropStart = null;
   }
-  dragging = false;
 }
       
 function drawCropOverlay() {
