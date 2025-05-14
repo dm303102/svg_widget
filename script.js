@@ -1,5 +1,3 @@
-let dragOffset = { x:0, y:0 };
-
 function getMousePos(evt) {
   const rect = canvas.getBoundingClientRect();
   return {
@@ -120,13 +118,6 @@ let cropStart  = null;
 initLength();
 
 //Listener functions
-function toggleCrop() {
-  cropping = !cropping;
-  cropBtn.textContent = cropping ? 'Cancel Cropping' : 'Crop';
-  canvas.style.cursor  = cropping ? 'crosshair' : 'default';
-  redrawCanvas();
-}
-  
 function onCanvasClick(e) {
   const { x, y } = getMousePos(e);
   // search from topmost to bottom
@@ -424,7 +415,7 @@ function exportSVG() {
   out += `</svg>`;
 
   const mime = { type: 'image/svg+xml' };
-  const blob = new Blob([svg], mime);
+  const blob = new Blob([out], mime);
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = 'canvas-export.svg'; a.click();
@@ -461,20 +452,9 @@ function onMouseDown(e) {
   if (cropping) {
     cropStart = { startX: x, startY: y, curX: x, curY: y };
   } else {
-    const it = images.find(img => hitTest(img, x, y));
-    if (it) {
-      selectedId = it.id;
-         // start dragging immediately:
-      dragging = true;
-      dragOffset.x = x - it.x;
-      dragOffset.y = y - it.y;
-    }
-  }
-  
-  // if you click *any* image (not just the already‑selected), select & begin drag
-  for (let i = images.length - 1; i >= 0; i--) {
+    for (let i = images.length - 1; i >= 0; i--) {
     const img = images[i];
-    if (hitTest(img, x, y)) {
+     if (hitTest(img, x, y)) {
       if (img.id !== selectedId) {
         selectImage(img.id);
       }
@@ -484,9 +464,19 @@ function onMouseDown(e) {
       dragOffset.y = y - img.y;
       pushHistory();
       return;
+     }
+    }
+    const it = images.find(img => hitTest(img, x, y));
+    if (it) {
+      selectedId = it.id;
+         // start dragging immediately:
+      dragging = true;
+      dragOffset.x = x - it.x;
+      dragOffset.y = y - it.y;
+        // if you click *any* image (not just the already‑selected), select & begin drag
+    }
   }
- }
- redrawCanvas();
+   redrawCanvas();
 }
       
 function onMouseMove(e) {
@@ -622,7 +612,6 @@ function generateText() {
       rotation:       0
     };
     images.push(img._meta);
-    canvasImages.push(img);
     updateList();
     redrawCanvas();
     URL.revokeObjectURL(url);
