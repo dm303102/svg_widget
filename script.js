@@ -551,7 +551,7 @@ function handleFileLoad(e) {
   if (L && W) {
     const wPx = L * DPI, hPx = W * DPI;
     
-// Loop normally, no .forEach → no "});"
+// Loop 
     for (const file of e.target.files) {
       readSvgFile(file, wPx, hPx);
     }
