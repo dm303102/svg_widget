@@ -165,20 +165,26 @@ function onSvgListActionClick(e) {
 
   if (!li) return;
   const id = li.dataset.id;
-   if (action === 'scale') {
-    // set scalePercent to slider%
-    const pct = +e.target.value / 100;
-    const img = images.find(i => i.id === selectedId);
-    if (!img) return;
-    const minS = getMinScalePercent(img);
-    img.scalePercent = clamp(pct, minS, MAX_SCALE);
-    pushHistory();
-    redrawCanvas();
-    return;  // don’t fall through to switch
-   }
-
   
   switch (action) {
+          case 'align-left':
+      // snap to left border
+      it.x = borderPx;
+      break;
+    case 'align-center':
+      // center within the canvas drawing area
+      {
+        const dW = it.origW * it.fitScale * it.scalePercent;
+        it.x = borderPx + (canvas.width - 2*borderPx - dW) / 2;
+      }
+      break;
+    case 'align-right':
+      // snap to right border
+      {
+       const dW = it.origW * it.fitScale * it.scalePercent;
+        it.x = canvas.width - borderPx - dW;
+      }
+      break;
     case 'rotate-left':
       it.rotation -= ROTATION_STEP;
       break;
@@ -193,10 +199,21 @@ function onSvgListActionClick(e) {
       images = images.filter(img => img.id !== id);
       if (selectedId === id) selectedId = images[0]?.id || null;
       break;
+     case 'scale':
+      // set scalePercent to slider%
+      const pct = +e.target.value / 100;
+      const img = images.find(i => i.id === selectedId);
+      if (!img) return;
+        const minS = getMinScalePercent(img);
+      img.scalePercent = clamp(pct, minS, MAX_SCALE);
+      pushHistory();
+      redrawCanvas();
+      return;  // don’t fall through to switch
   }
   pushHistory();
   selectImage(selectedId || images[0]?.id);
 }
+  
 svgList.addEventListener('click', onSvgListActionClick);
 svgList.addEventListener('input', onSvgListActionClick);
 
@@ -369,6 +386,23 @@ function updateList() {
     delBtn.textContent = '✕';
     delBtn.title = 'Delete';
     delBtn.dataset.action = 'delete';
+
+    const alignLeftBtn = document.createElement('button');
+    alignLeftBtn.textContent   = '←';
+    alignLeftBtn.title         = 'Align Left';
+    alignLeftBtn.dataset.action= 'align-left';
+    
+    const alignCenterBtn = document.createElement('button');
+    alignCenterBtn.textContent   = '↔';
+    alignCenterBtn.title         = 'Align Center';
+    alignCenterBtn.dataset.action= 'align-center';
+    
+    const alignRightBtn = document.createElement('button');
+    alignRightBtn.textContent   = '→';
+    alignRightBtn.title         = 'Align Right';
+    alignRightBtn.dataset.action= 'align-right';
+    
+    ctr.append(alignLeftBtn, alignCenterBtn, alignRightBtn);
 
     ctr.append(rotateLeftBtn, rotateRightBtn, scaleInput, dupBtn, delBtn);
     li.append(name, ctr);
