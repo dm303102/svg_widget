@@ -357,16 +357,16 @@ function updateList() {
     const ctr = document.createElement('div');
     ctr.className = 'item-controls';
 
-    // rotate button
-      const rotateLeftBtn = document.createElement('button');
-      rotateLeftBtn.textContent   = '⟲';
-      rotateLeftBtn.title         = 'Rotate Left 15°';
-      rotateLeftBtn.dataset.action = 'rotate-left';
-      
-      const rotateRightBtn = document.createElement('button');
-      rotateRightBtn.textContent   = '⟳';
-      rotateRightBtn.title         = 'Rotate Right 15°';
-      rotateRightBtn.dataset.action = 'rotate-right';
+  // rotate button
+    const rotateLeftBtn = document.createElement('button');
+    rotateLeftBtn.textContent   = '⟲';
+    rotateLeftBtn.title         = 'Rotate Left 15°';
+    rotateLeftBtn.dataset.action = 'rotate-left';
+    
+    const rotateRightBtn = document.createElement('button');
+    rotateRightBtn.textContent   = '⟳';
+    rotateRightBtn.title         = 'Rotate Right 15°';
+    rotateRightBtn.dataset.action = 'rotate-right';
 
     // scale slider
     const scaleInput = document.createElement('input');
@@ -409,7 +409,32 @@ function updateList() {
     ctr.append(rotateLeftBtn, rotateRightBtn, scaleInput, dupBtn, delBtn);
     li.append(name, ctr);
     svgList.append(li);
+
+    if (it.svgText && it.svgText.includes('<text')) {
+    // FONT SELECT
+    const fontSel = document.createElement('select');
+    fontSel.dataset.action = 'change-font';
+    // list your fonts here (or populate dynamically)
+    ['Arial','Verdana','Times New Roman','Roboto','Lato'].forEach(f => {
+      const o = document.createElement('option');
+      o.value       = f;
+     o.textContent = f;
+      if (it.fontFamily === f) o.selected = true;
+      fontSel.appendChild(o);
+    });
+    ctr.appendChild(fontSel);
+
+    // SIZE INPUT
+    const sizeIn = document.createElement('input');
+    sizeIn.type           = 'number';
+    sizeIn.min            = 8;
+    sizeIn.max            = 200;
+    sizeIn.value          = it.fontSize || 48;
+    sizeIn.style.width    = '4rem';
+    sizeIn.dataset.action = 'change-size';
+    ctr.appendChild(sizeIn);
   }
+ }
 }
 
 function rotateSelected(by = ROTATION_STEP) {
