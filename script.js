@@ -212,17 +212,15 @@ function onSvgListActionClick(e) {
   const id = li.dataset.id;
   
   switch (action) {
-          case 'align-left':
+     case 'align-left':
       // snap to left border
       it.x = borderPx;
       break;
     case 'align-center':
       // center within the canvas drawing area
-      {
-        const dW = it.origW * it.fitScale * it.scalePercent;
+       const dW = it.origW * it.fitScale * it.scalePercent;
         it.x = borderPx + (canvas.width - 2*borderPx - dW) / 2;
-      }
-      break;
+        break;
     case 'align-right':
       // snap to right border
       {
@@ -245,12 +243,12 @@ function onSvgListActionClick(e) {
       if (selectedId === id) selectedId = images[0]?.id || null;
       break;
     case 'change-font':
-      img.fontFamily = e.target.value;
-      regenerateTextSVG(img);
+      it.fontFamily = e.target.value;
+      regenerateTextSVG(it);
       break;
     case 'change-size':
-      img.fontSize = parseInt(e.target.value,10) || img.fontSize;
-      regenerateTextSVG(img);
+      it.fontSize = parseInt(e.target.value,10) || it.fontSize;
+      regenerateTextSVG(it);
       break;
      case 'scale':
       // set scalePercent to slider%
@@ -773,26 +771,23 @@ function generateText() {
       // measure text on canvas
       const ctx2 = document.createElement('canvas').getContext('2d');
       ctx2.font = `${fontSize}px ${font}`;
-      const metrics       = ctx2.measureText(text);
-      const textWidth     = Math.ceil(metrics.width);
-      const ascent        = Math.ceil(metrics.actualBoundingBoxAscent);
-      const descent       = Math.ceil(metrics.actualBoundingBoxDescent);
-      const textHeight    = ascent + descent;
+      const metrics = ctx2.measureText(text);
+      const left    = metrics.actualBoundingBoxLeft;
+      const right   = metrics.actualBoundingBoxRight;
+      const ascent  = metrics.actualBoundingBoxAscent;
+      const descent = metrics.actualBoundingBoxDescent;
+      
+      const w = Math.ceil(left + right);
+      const h = Math.ceil(ascent + descent);
 
       // build SVG with inline attributes
-      const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg"
-           width="${textWidth}" height="${textHeight}">
-        <style><![CDATA[
-          text {
-            font-family: '${font}';
-            font-size: ${fontSize}px;
-            fill: #000;
-          }
-        ]]></style>
-        <text x="0" y="${ascent}">${text}</text>
-      </svg>`.trim();
-              
+      const svg = 
+        `<svg xmlns="http://www.w3.org/2000/svg" ` +
+         `width="${w}" height="${h}" viewBox="${-left} 0 ${w} ${h}">` +
+          `<style>text{font-family:'${font}';font-size:${fontSize}px;fill:#000;}</style>` +
+          `<text x="0" y="${ascent}">${text}</text>` +
+        `</svg>`;
+                     
       // load into an Image
       const blob = new Blob([svg], { type: 'image/svg+xml' });
       const url  = URL.createObjectURL(blob);
