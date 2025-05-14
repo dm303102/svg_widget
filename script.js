@@ -169,8 +169,10 @@ function regenerateTextSVG(img) {
     img.svgText    = newSvg;
     img.origW      = newImg.width;
     img.origH      = newImg.height;
-    img.fitScale   = 1;
-    img.scalePercent = 1;
+    img.image      = newImg;
+    img.svgText    = newSvg;
+    img.origW      = newImg.width;
+    img.origH      = newImg.height;
     URL.revokeObjectURL(url);
     redrawCanvas();
   };
@@ -271,8 +273,11 @@ function onSvgListActionClick(e) {
   selectImage(selectedId || images[0]?.id);
 }
   
-svgList.addEventListener('click', onSvgListActionClick);
-svgList.addEventListener('input', onSvgListActionClick);
+//svgList.addEventListener('click', onSvgListActionClick);
+//svgList.addEventListener('input', onSvgListActionClick);
+['click','input','change'].forEach(ev =>
+  svgList.addEventListener(ev, onSvgListActionClick)
+);
 
 function onSvgListSelectClick(e) {
   const btn = e.target.closest('button, input[type=range]');
@@ -400,6 +405,8 @@ function redrawCanvas() {
 
 function updateList() {
   svgList.innerHTML = '';
+  const masterOpts = Array.from(fontSelect.options).map(o => o.value);
+  
   for (const it of images) {
     const li = document.createElement('li');
     li.dataset.id = it.id;
@@ -470,13 +477,13 @@ function updateList() {
     const fontSel = document.createElement('select');
     fontSel.dataset.action = 'change-font';
     // list your fonts here (or populate dynamically)
-    ['Arial','Verdana','Times New Roman','Roboto','Lato'].forEach(f => {
+    for (const family of masterOpts) {
       const o = document.createElement('option');
-      o.value       = f;
-     o.textContent = f;
-      if (it.fontFamily === f) o.selected = true;
+      o.value = family;
+      o.textContent = family;
+      if (it.fontFamily === family) o.selected = true;
       fontSel.appendChild(o);
-    });
+    }
     ctr.appendChild(fontSel);
 
     // SIZE INPUT
@@ -660,6 +667,7 @@ function drawCropOverlay() {
     ctx.strokeRect(x0,y0,w0,h0);
   ctx.restore();
 }
+  
 function finalizeCrop() {
   const it = images.find(img => img.id === selectedId);
   const { startX, startY, curX, curY } = cropStart;
@@ -676,10 +684,12 @@ function finalizeCrop() {
   const sx = it.x + x0;
   const sy = it.y + y0;
   // draw from the main canvas bitmap:
-  tctx.drawImage(
-  canvas,
-  sx, sy, w0, h0,
-  0,  0,  w0, h0
+ // draw only the raw img, not the overlays:
+  tctx.save();
+  tctx.translate(-it.x, -it.y);
+  tctx.drawImage(it.image, it.x, it.y, it.origW * it.fitScale * it.scalePercent,
+               it.origH * it.fitScale * it.scalePercent);
+  tctx.restore();
 );
 
   // replace image with the cropped one    
