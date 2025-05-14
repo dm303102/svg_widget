@@ -518,7 +518,15 @@ function finalizeCrop() {
   const tmp = document.createElement('canvas');
   tmp.width = w0; tmp.height = h0;
   const tctx = tmp.getContext('2d');
-  tctx.drawImage(it.image, x0,y0,w0,h0, 0,0,w0,h0);
+  // inside finalizeCrop, after computing x0,y0,w0,h0:
+  const sx = it.x + x0;
+  const sy = it.y + y0;
+  // draw from the main canvas bitmap:
+  tctx.drawImage(
+  canvas,
+  sx, sy, w0, h0,
+  0,  0,  w0, h0
+);
 
   // replace image with the cropped one    
   const newImg = new Image();
