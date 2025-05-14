@@ -116,7 +116,9 @@ const undoBtn           = document.getElementById('undoBtn');
 const exportBtn         = document.getElementById('exportBtn');
 const svgList           = document.getElementById('svgList');
 const fileInput         = document.getElementById('fileInput');
-
+const fontSelect = document.getElementById('fontSelect');
+const apiKey     = 'AIzaSyAK4c5PbgmIulpkgiGH0QCmwosi0W8oNKQ'; 
+  
 let images = [], selectedId = null, history = [];
 let dragging = false, cropping = false;
 let dragOffset = { x: 0, y: 0 };
@@ -630,62 +632,6 @@ const fontSelect = document.getElementById('fontSelect');
 const textBtn    = document.getElementById('textBtn');
 textBtn.addEventListener('click', generateText);
 
-function generateText() {
-  const text = prompt('Enter text to turn into SVG:');
-  if (!text) return;
-
-  // grab font & size
-  const font     = document.getElementById('fontSelect').value;
-  const fontSize = parseInt(
-    document.getElementById('fontSizeInput').value, 10
-  ) || 48;
-
-  // measure on offscreen canvas
-  const ctx2 = document.createElement('canvas').getContext('2d');
-  ctx2.font = `${fontSize}px ${font}`;
-  const textWidth  = Math.ceil(ctx2.measureText(text).width);
-  const textHeight = Math.ceil(fontSize * 1.2);
-
-  // build SVG with inline attributes
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="${textWidth}" height="${textHeight}">
-  <text
-    x="0" y="${fontSize}"
-    font-family="${font}"
-    font-size="${fontSize}px"
-    fill="#000"
-  >${text}</text>
-</svg>`.trim();
-
-  // load into an Image
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
-  const url  = URL.createObjectURL(blob);
-  const img  = new Image();
-
-  img.onload = () => {
-    const newImage = {
-      id:           Date.now().toString(36),
-      filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
-      svgText:      svg,
-      origW:        img.width,
-      origH:        img.height,
-      fitScale:     1,
-      scalePercent: 1,
-      rotation:     0,
-      x:            borderPx + (canvas.width/2 - img.width/2),
-      y:            borderPx + (canvas.height/2 - img.height/2),
-      image:        img
-    };
-    images.push(newImage);
-    updateList();
-    redrawCanvas();
-    URL.revokeObjectURL(url);
-  };
-
-  img.src = url;
-}
-
 function handleFileLoad(e) {
   const L = +lengthSelect.value, W = +widthSelect.value;
   if (L && W) {
@@ -735,4 +681,66 @@ function onSvgTextLoaded(ev) {
   // stash the rest on the image so we can read them in the callback
   img._meta = { id, filename: file.name, txt, origW, origH, fitScale, x, y };
 }
+
+function generateText() {
+  const text = prompt('Enter text to turn into SVG:');
+  if (!text) return;
+
+  // grab font & size
+  const font     = fontSelect.value;
+  const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10) || 48;
+
+    // 3️⃣ Load the chosen font first
+  WebFont.load({
+    google: { families: [ font ] },
+    active: () => {
+      // only runs once the font file is ready in the browser
+
+      // measure text on canvas
+      const ctx2 = document.createElement('canvas').getContext('2d');
+      ctx2.font = `${fontSize}px ${font}`;
+      const textWidth  = Math.ceil(ctx2.measureText(text).width);
+      const textHeight = Math.ceil(fontSize * 1.2);
+
+      // build SVG with inline attributes
+      const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg"
+           width="${textWidth}" height="${textHeight}">
+        <text x="0" y="${fontSize}"
+              font-family="${font}"
+              font-size="${fontSize}px"
+              fill="#000">
+          ${text}
+        </text>
+      </svg>`.trim();
+        
+  // load into an Image
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const url  = URL.createObjectURL(blob);
+  const img  = new Image();
+
+  img.onload = () => {
+    const newImage = {
+      id:           Date.now().toString(36),
+      filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
+      svgText:      svg,
+      origW:        img.width,
+      origH:        img.height,
+      fitScale:     1,
+      scalePercent: 1,
+      rotation:     0,
+      x:            borderPx + (canvas.width/2 - img.width/2),
+      y:            borderPx + (canvas.height/2 - img.height/2),
+      image:        img
+    };
+    images.push(newImage);
+    updateList();
+    redrawCanvas();
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+   }
+});  // <-- closes WebFont.load({
+}      // <-- closes generateText()
+
 });
