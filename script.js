@@ -143,8 +143,8 @@ function regenerateTextSVG(img) {
   const ascent  = metrics.actualBoundingBoxAscent;
   const descent = metrics.actualBoundingBoxDescent;
   
-  const w = left + right;
-  const h = ascent + descent;
+  const w = Math.ceil(left + right);
+  const h = Math.ceil(ascent + descent);
   
   // One‑liner, no stray newlines/indent:
   const newSvg = 
@@ -152,10 +152,10 @@ function regenerateTextSVG(img) {
          'width="'  + w + '" ' +
          'height="' + h + '" ' +
          'viewBox="' + (-left) + ' 0 ' + w + ' ' + h + '">' +
-      '<text x="0" y="' + ascent + '"' +
-            ' font-family="' + font + '"' +
-            ' font-size="'     + fontSize + 'px"' +
-            ' fill="#000">' +
+         '<text x="0" y="' + ascent + '"' +
+         ' font-family="' + font + '"' +
+         ' font-size="'     + size     + 'px"' +  // use “size” here
+         ' fill="#000">' +
         text +
       '</text>' +
     '</svg>';
@@ -223,7 +223,7 @@ function onSvgListActionClick(e) {
       it.x = borderPx;
       break;
     case 'align-center':
-      const dW = it.origW * it.scalePercent;
+      const dW = it.origW * it.fitScale * it.scalePercent;
       // center in the full canvas:
       it.x = (canvas.width - dW) / 2;
       break;
