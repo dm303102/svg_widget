@@ -14,7 +14,7 @@ function clamp(val, min, max) {
   return Math.min(max, Math.max(min, val));
 }
 
-document.addEventListener('DOMContentLoaded', **async** () => {
+document.addEventListener('DOMContentLoaded', () => {
 const canvas            = document.getElementById('mainCanvas');
 const ctx               = canvas.getContext('2d');
 // --- configuration & DOM refs ---
@@ -873,4 +873,12 @@ fetch(url2)
       updateList();
     })
     .catch(err => console.error('Couldn’t load Google Fonts list:', err));  
+init();
 });
+
+async function init() {
+  await loadFonts();       
+  updateList();          
+  textBtn.addEventListener('click', generateText);
+  // wire up all the rest of your listeners…
+}
