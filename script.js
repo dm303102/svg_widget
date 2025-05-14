@@ -277,10 +277,7 @@ function onSvgListActionClick(e) {
 
 function onSvgListSelectClick(e) {
   // ignore clicks on buttons, sliders, selects or number inputs
-  const ctrl = e.target.closest(
-    'button, input[type=range], select, input[type=number]'
-  );
-  if (ctrl) return;
+  if (e.target.closest('button, input, select')) return;
   const li = e.target.closest('li');
   if (!li) return;
   selectImage(li.dataset.id);
@@ -484,10 +481,14 @@ function updateList() {
         fontSel.appendChild(o);
         }
       fontSel.addEventListener('change', ev => {
-      it.fontFamily = ev.target.value;
-      regenerateTextSVG(it);
-      pushHistory();
-      redrawCanvas();
+      WebFont.load({
+        google: { families: [ it.fontFamily ] },
+        active: () => {
+          regenerateTextSVG(it);
+          pushHistory();
+          redrawCanvas();
+        }
+      });
     });
     ctr.appendChild(fontSel);
 
@@ -500,9 +501,14 @@ function updateList() {
     sizeIn.style.width    = '4rem';
     sizeIn.addEventListener('change', ev => {
       it.fontSize = parseInt(ev.target.value,10) || it.fontSize;
-      regenerateTextSVG(it);
-      pushHistory();
-      redrawCanvas();
+      WebFont.load({
+        google: { families: [ it.fontFamily ] },
+        active: () => {
+          regenerateTextSVG(it);
+          pushHistory();
+          redrawCanvas();
+        }
+      });
     });
     ctr.appendChild(sizeIn);
   }
