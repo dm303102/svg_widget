@@ -598,25 +598,25 @@ function generateText() {
   const img  = new Image();
 
   img.onload = () => {
-    // mirror your normal SVG‐load logic
-    img._meta = {
-      id:             Date.now().toString(36),
-      filename:       `text_${text}.svg`,
-      txt:            svg,
-      origW:          img.width,
-      origH:          img.height,
-      fitScale:       1,
-      scalePercent:   1,
-      x:              borderPx + (canvas.width/2 - img.width/2),
-      y:              borderPx + (canvas.height/2 - img.height/2),
-      rotation:       0
-    };
-    images.push(img._meta);
-    updateList();
-    redrawCanvas();
-    URL.revokeObjectURL(url);
+  const newImage = {
+    id:           Date.now().toString(36),
+    filename:     `text_${text}.svg`,
+    svgText:      svg,
+    origW:        img.width,
+    origH:        img.height,
+    fitScale:     1,
+    scalePercent: 1,
+    rotation:     0,
+    x:            borderPx + (canvas.width/2 - img.width/2),
+    y:            borderPx + (canvas.height/2 - img.height/2),
+    image:        img       // ← here’s the crucial bit
   };
-
+  images.push(newImage);
+  updateList();
+  redrawCanvas();
+  URL.revokeObjectURL(url);
+};
+      
   img.src = url;
 }
 
