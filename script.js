@@ -111,7 +111,7 @@ let cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
 initLength();
 
 //Listener functions
-canvas.addEventListener('click', e => {
+function onCanvasClick(e) {
   const { x, y } = toCanvasCoords(e);
   // search from topmost to bottom
   for (let i = images.length - 1; i >= 0; i--) {
@@ -120,8 +120,8 @@ canvas.addEventListener('click', e => {
       break;
     }
   }
-});
-      
+}
+canvas.addEventListener('click', onCanvasClick);
 renderBtn.addEventListener('click', redrawCanvas);
 exportBtn.addEventListener('click', exportSVG);
       
@@ -188,13 +188,14 @@ canvas.addEventListener('mousemove', onMouseMove);
 const cropBtn = document.getElementById('cropBtn');
 
   // toggle crop‑mode on/off
-  cropBtn.addEventListener('click', () => {
+   function onCropBtnClick() {
     cropping = !cropping;
     // give user visual feedback:
     cropBtn.textContent = cropping ? 'Cancel Crop' : 'Crop';
     canvas.style.cursor = cropping ? 'crosshair' : 'default';
-  });
+   }
 
+  cropBtn.addEventListener('click', onCropBtnClick);
   // canvas mouse handlers (make sure these run _after_ that toggle above)
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mousemove', onMouseMove);
@@ -424,7 +425,8 @@ function exportSVG() {
 
   out += `</svg>`;
 
-  const blob = new Blob([out], { type: 'image/svg+xml' });
+  const mime = { type: 'image/svg+xml' };
+  const blob = new Blob([out], mime);
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = 'canvas-export.svg'; a.click();
