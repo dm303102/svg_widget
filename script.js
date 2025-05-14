@@ -119,6 +119,14 @@ let cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
 initLength();
 
 //Listener functions
+function toggleCrop() {
+  isCropping = !isCropping;
+  cropStart  = null;              // ← clear any pending crop
+  cropBtn.textContent = isCropping ? 'Cancel Cropping' : 'Crop';
+  canvas.style.cursor  = isCropping ? 'crosshair' : 'default';
+  redrawCanvas();
+}
+  
 function onCanvasClick(e) {
   const { x, y } = toCanvasCoords(e);
   // search from topmost to bottom
@@ -451,15 +459,20 @@ function hitTest(img, x, y) {
   return lx >= -dW/2 && lx <= dW/2
       && ly >= -dH/2 && ly <= dH/2;
 }
+  
 function onMouseDown(e) {
-  const { x, y } = toCanvasCoords(e);
-      
-  if (cropping) {
-    cropStart.startX = cropStart.curX = x;
-    cropStart.startY = cropStart.curY = y;
-    return;
+  const { x, y } = getMousePos(e);
+    
+  if (isCropping) {
+    cropStart = { startX: x, startY: y, curX: x, curY: y };
+  } else {
+    const it = images.find(img => hitTest(img, x, y));
+    if (it) {
+      selectedId = it.id;
+      dragStart = { x, y, imgX: it.x, imgY: it.y };
+    }
   }
-
+  
   // if you click *any* image (not just the already‑selected), select & begin drag
   for (let i = images.length - 1; i >= 0; i--) {
     const img = images[i];
@@ -475,6 +488,7 @@ function onMouseDown(e) {
       return;
   }
  }
+ redrawCanvas();
 }
       
 function onMouseMove(e) {
@@ -494,7 +508,12 @@ function onMouseMove(e) {
   }
 }
 function onMouseUp() {
-  if (cropping && cropStart.startX != null) finalizeCrop();
+  if (isCropping && cropStart) {
+    finalizeCrop();
+    cropStart = null;
+  }
+  dragStart = null;
+  
   if (dragging) {
     updateList();
     redrawCanvas();
@@ -560,6 +579,60 @@ function finalizeCrop() {
     redrawCanvas();
   };
   newImg.src = tmp.toDataURL();
+}
+
+const fontSelect = document.getElementById('fontSelect');
+const textBtn    = document.getElementById('textBtn');
+textBtn.addEventListener('click', generateText);
+
+function generateText() {
+  const text = prompt('Enter text to turn into SVG:');
+  if (!text) return;
+
+  const font     = fontSelect.value;
+  const fontSize = 48;
+  // measure width via offscreen canvas
+  const meas = document.createElement('canvas').getContext('2d');
+  meas.font = `${fontSize}px ${font}`;
+  const textWidth  = meas.measureText(text).width;
+  const textHeight = fontSize * 1.2;
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg"
+                    width="${textWidth}" height="${textHeight}">
+                 <text x="0" y="${fontSize}"
+                       font-family="${font}"
+                       font-size="${fontSize}px">
+                   ${text}
+                 </text>
+               </svg>`;
+
+  const mime = { type: 'image/svg+xml' };
+  const blob = new Blob([out], mime);
+  const url  = URL.createObjectURL(blob);
+  const img  = new Image();
+
+  img.onload = () => {
+    // mirror your normal SVG‐load logic
+    img._meta = {
+      id:             Date.now().toString(36),
+      filename:       `text_${text}.svg`,
+      txt:            svg,
+      origW:          img.width,
+      origH:          img.height,
+      fitScale:       1,
+      scalePercent:   1,
+      x:              borderPx + (canvas.width/2 - img.width/2),
+      y:              borderPx + (canvas.height/2 - img.height/2),
+      rotation:       0
+    };
+    images.push(img._meta);
+    canvasImages.push(img);
+    updateList();
+    redrawCanvas();
+    URL.revokeObjectURL(url);
+  };
+
+  img.src = url;
 }
 
 function handleFileLoad(e) {
