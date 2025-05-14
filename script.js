@@ -168,8 +168,8 @@ function regenerateTextSVG(img) {
   newImg.onload = () => {
     img.image      = newImg;
     img.svgText    = newSvg;
-    img.origW      = newImg.width;
-    img.origH      = newImg.height;
+    img.origW      = newImg.naturalWidth;
+    img.origH      = newImg.naturalHeight;
     updateList();
     selectImage(img.id);
     redrawCanvas();
@@ -479,14 +479,13 @@ function updateList() {
         fontSel.appendChild(o);
         }
       fontSel.addEventListener('change', ev => {
-      it.fontFamily = ev.target.value;
-      WebFont.load({
-        google: { families: [ it.fontFamily ] },
-        active: () => {
-          regenerateTextSVG(it);
-          pushHistory();
-          redrawCanvas();
-        }
+        it.fontFamily = ev.target.value;
+        pushHistory();
+        WebFont.load({
+          google: { families: [ it.fontFamily ] },
+          active: () => {
+            regenerateTextSVG(it);
+          }
       });
     });
     ctr.appendChild(fontSel);
@@ -500,12 +499,11 @@ function updateList() {
     sizeIn.style.width    = '4rem';
     sizeIn.addEventListener('change', ev => {
       it.fontSize = parseInt(ev.target.value,10) || it.fontSize;
+      pushHistory();
       WebFont.load({
         google: { families: [ it.fontFamily ] },
         active: () => {
           regenerateTextSVG(it);
-          pushHistory();
-          redrawCanvas();
         }
       });
     });
@@ -855,31 +853,16 @@ function generateText() {
 
 const url2        = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
 fetch(url2)
-  .then(res => {
-    if (!res.ok) {
-      // try to print the API’s own error message:
-      return res.json().then(errBody => {
-        console.error('Google Fonts API error', res.status, errBody);
-        throw new Error(errBody.error?.message || `HTTP ${res.status}`);
+.then(res => res.json())
+    .then(data => {
+      data.items.forEach(font => {
+        const opt = document.createElement('option');
+        opt.value = font.family;
+        opt.textContent = font.family;
+        fontSelect.appendChild(opt);
       });
-    }
-    return res.json();
-  })
-  .then(data => {
-    console.log('Google Fonts response', data);
-    if (!Array.isArray(data.items)) {
-      console.error('No items array in response:', data);
-      return;
-    }
-    data.items.forEach(font => {
-      const opt = document.createElement('option');
-      opt.value = font.family;
-      opt.textContent = font.family;
-      fontSelect.appendChild(opt);
-    });
-  })
-  .catch(err => {
-    console.error('Couldn’t load Google Fonts list:', err);
-  });
-  
+      // now that fontSelect is fully populated, rebuild every row:
+      updateList();
+    })
+    .catch(err => console.error('Couldn’t load Google Fonts list:', err));  
 });
