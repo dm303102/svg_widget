@@ -114,6 +114,7 @@ const priceDisplay      = document.getElementById('priceDisplay');
 const fileInputContainer= document.getElementById('fileInputContainer');
 const undoBtn           = document.getElementById('undoBtn');
 const exportBtn         = document.getElementById('exportBtn');
+const textBtn    = document.getElementById('textBtn');
 const svgList           = document.getElementById('svgList');
 const fileInput         = document.getElementById('fileInput');
 const fontSelect = document.getElementById('fontSelect');
@@ -186,7 +187,10 @@ function getMousePos(evt) {
     y: (evt.clientY - rect.top ) * (canvas.height / rect.height)
   };
 }
-  
+
+//Listener Functions
+textBtn.addEventListener('click', generateText);
+
 function onCanvasClick(e) {
   const { x, y } = getMousePos(e);
   // search from topmost to bottom
@@ -307,7 +311,7 @@ function onCropBtnClick() {
     canvas.addEventListener(evt, onMouseUp)
   );
       
-// --- functions ---
+// --- Core functions ---
 function onImageLoaded(ev) {
   const img = ev.target;
   const m   = img._meta;
@@ -690,7 +694,6 @@ function finalizeCrop() {
   tctx.drawImage(it.image, it.x, it.y, it.origW * it.fitScale * it.scalePercent,
                it.origH * it.fitScale * it.scalePercent);
   tctx.restore();
-);
 
   // replace image with the cropped one    
   const newImg = new Image();
@@ -717,8 +720,6 @@ function finalizeCrop() {
   };
   newImg.src = tmp.toDataURL();
 }
-const textBtn    = document.getElementById('textBtn');
-textBtn.addEventListener('click', generateText);
 
 function handleFileLoad(e) {
   const L = +lengthSelect.value, W = +widthSelect.value;
