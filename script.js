@@ -112,7 +112,7 @@ const ctx               = canvas.getContext('2d');
 let images = [], selectedId = null, history = [];
 let dragging = false, cropping = false;
 let dragOffset = { x: 0, y: 0 };
-let cropStart  = { startX: 0, startY: 0, curX: 0, curY: 0 };
+let cropStart  = null;
 
 // --- initial setup ---
 initLength();
@@ -463,7 +463,10 @@ function onMouseDown(e) {
     const it = images.find(img => hitTest(img, x, y));
     if (it) {
       selectedId = it.id;
-      dragStart = { x, y, imgX: it.x, imgY: it.y };
+         // start dragging immediately:
+      dragging = true;
+      dragOffset.x = x - it.x;
+      dragOffset.y = y - it.y;
     }
   }
   
