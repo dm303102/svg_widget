@@ -217,7 +217,7 @@ fileInput.addEventListener('change', handleFileLoad);
 
 function onSvgListActionClick(e) {
   const action = e.target.dataset.action;
-  if (!action) return;   
+  if (!action || action === 'change-font' || action === 'change-size') return;   
   const li     = e.target.closest('li');
   if (!li) return;
   const it     = images.find(img => img.id === li.dataset.id);
