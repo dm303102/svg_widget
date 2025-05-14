@@ -223,10 +223,10 @@ function onSvgListActionClick(e) {
       it.x = borderPx;
       break;
     case 'align-center':
-      // center within the canvas drawing area
-       const dW = it.origW * it.fitScale * it.scalePercent;
-        it.x = borderPx + (canvas.width - 2*borderPx - dW) / 2;
-        break;
+      const dW = it.origW * it.scalePercent;
+      // center in the full canvas:
+      it.x = (canvas.width - dW) / 2;
+      break;
     case 'align-right':
       // snap to right border
       {
@@ -764,59 +764,60 @@ function generateText() {
   const text = prompt('Enter text to turn into SVG:');
   if (!text) return;
 
-  // grab font & size
+  // 1) read controls
   const font     = fontSelect.value;
   const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10) || 48;
 
-    // 3️⃣ Load the chosen font first
+  // 2) wait for the font to load
   WebFont.load({
     google: { families: [ font ] },
     active: () => {
-      // only runs once the font file is ready in the browser
+      // 3) measure true text bounds
+      const ctx = document.createElement('canvas').getContext('2d');
+      ctx.font = `${fontSize}px ${font}`;
+      const m       = ctx.measureText(text);
+      const left    = m.actualBoundingBoxLeft;
+      const right   = m.actualBoundingBoxRight;
+      const ascent  = m.actualBoundingBoxAscent;
+      const descent = m.actualBoundingBoxDescent;
+      const w       = Math.ceil(left + right);
+      const h       = Math.ceil(ascent + descent);
 
-      // measure text on canvas
-      const ctx2 = document.createElement('canvas').getContext('2d');
-      ctx2.font = `${fontSize}px ${font}`;
-      const metrics = ctx2.measureText(text);
-      const left    = metrics.actualBoundingBoxLeft;
-      const right   = metrics.actualBoundingBoxRight;
-      const ascent  = metrics.actualBoundingBoxAscent;
-      const descent = metrics.actualBoundingBoxDescent;
-      
-      const w = left + right;
-      const h = ascent + descent;
-      
-      // One‑liner, no stray newlines/indent:
+      // 4) build a one‑liner SVG with inline style and viewBox
       const svg = 
         '<svg xmlns="http://www.w3.org/2000/svg" ' +
              'width="'  + w + '" ' +
              'height="' + h + '" ' +
              'viewBox="' + (-left) + ' 0 ' + w + ' ' + h + '">' +
-          '<text x="0" y="' + ascent + '"' +
-                ' font-family="' + font + '"' +
-                ' font-size="'     + fontSize + 'px"' +
-                ' fill="#000">' +
+          '<style>text{' +
+             'font-family:"' + font + '";' +
+             'font-size:'     + fontSize + 'px;' +
+             'fill:#000;' +
+          '}</style>' +
+          '<text x="0" y="' + ascent + '">' +
             text +
           '</text>' +
         '</svg>';
-                     
-      // load into an Image
+
+      // 5) load it into an Image and push with all metadata
       const blob = new Blob([svg], { type: 'image/svg+xml' });
       const url  = URL.createObjectURL(blob);
       const img  = new Image();
-    
+
       img.onload = () => {
         const newImage = {
           id:           Date.now().toString(36),
           filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
           svgText:      svg,
-          origW:        img.width,
-          origH:        img.height,
+          origW:        w,
+          origH:        h,
           fitScale:     1,
           scalePercent: 1,
           rotation:     0,
-          x:            borderPx + (canvas.width/2 - img.width/2),
-          y:            borderPx + (canvas.height/2 - img.height/2),
+          fontFamily:   font,       // record these!
+          fontSize:     fontSize,
+          x:            borderPx + (canvas.width/2 - w/2),
+          y:            borderPx + (canvas.height/2 - h/2),
           image:        img
         };
         images.push(newImage);
@@ -824,10 +825,11 @@ function generateText() {
         redrawCanvas();
         URL.revokeObjectURL(url);
       };
+
       img.src = url;
     }
-});  // <-- closes WebFont.load({
-}      // <-- closes generateText()
+  });
+}
 
 const url2        = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
 fetch(url2)
