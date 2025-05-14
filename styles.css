@@ -113,7 +113,7 @@ button:disabled {
 
 #svgList li.selected {
   background-color: #3498db;
-  color: #fff;
+  color: #000;
 }
 
 #svgList .deleteBtn {
