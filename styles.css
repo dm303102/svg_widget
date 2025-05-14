@@ -79,7 +79,7 @@ button:disabled {
 /* SVG list styling */
 #svgList {
   width: 100%;
-  max-width: none
+  max-width: none;
   list-style: none;
   margin-bottom: 1rem;
 }
