@@ -1,3 +1,11 @@
+function getMousePos(evt) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (evt.clientX - rect.left) * (canvas.width  / rect.width),
+    y: (evt.clientY - rect.top ) * (canvas.height / rect.height)
+  };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 // --- configuration & DOM refs ---
 const variants = [
