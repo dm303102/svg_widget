@@ -634,37 +634,36 @@ function generateText() {
   const text = prompt('Enter text to turn into SVG:');
   if (!text) return;
 
-  // 1) grab font & size from the controls
+  // grab font & size
   const font     = document.getElementById('fontSelect').value;
-  const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10) || 48;
+  const fontSize = parseInt(
+    document.getElementById('fontSizeInput').value, 10
+  ) || 48;
 
-  // 2) measure how big the SVG needs to be
-  const meas = document.createElement('canvas').getContext('2d');
-  meas.font = `${fontSize}px ${font}`;
-  const textWidth  = Math.ceil(meas.measureText(text).width);
+  // measure on offscreen canvas
+  const ctx2 = document.createElement('canvas').getContext('2d');
+  ctx2.font = `${fontSize}px ${font}`;
+  const textWidth  = Math.ceil(ctx2.measureText(text).width);
   const textHeight = Math.ceil(fontSize * 1.2);
 
-  // 3) build an SVG string with an inline <style> that forces our font + size + fill
+  // build SVG with inline attributes
   const svg = `
 <svg xmlns="http://www.w3.org/2000/svg"
      width="${textWidth}" height="${textHeight}">
-  <style><![CDATA[
-    text {
-      font-family: '${font}';
-      font-size: ${fontSize}px;
-      fill: #000;
-    }
-  ]]></style>
-  <text x="0" y="${fontSize}">${text}</text>
+  <text
+    x="0" y="${fontSize}"
+    font-family="${font}"
+    font-size="${fontSize}px"
+    fill="#000"
+  >${text}</text>
 </svg>`.trim();
 
-  // 4) make a blob‑URL and load it into an Image()
+  // load into an Image
   const blob = new Blob([svg], { type: 'image/svg+xml' });
   const url  = URL.createObjectURL(blob);
   const img  = new Image();
 
   img.onload = () => {
-    // 5) push a proper image record (with .image) and label it with font+size
     const newImage = {
       id:           Date.now().toString(36),
       filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
