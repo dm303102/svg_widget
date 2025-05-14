@@ -1,6 +1,3 @@
-let dragging   = false;
-let cropping   = false;
-let cropStart  = null;
 let dragOffset = { x:0, y:0 };
 
 function getMousePos(evt) {
@@ -427,7 +424,7 @@ function exportSVG() {
   out += `</svg>`;
 
   const mime = { type: 'image/svg+xml' };
-  const blob = new Blob([out], mime);
+  const blob = new Blob([svg], mime);
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = 'canvas-export.svg'; a.click();
@@ -517,8 +514,7 @@ function onMouseUp() {
     finalizeCrop();
     cropStart = null;
   }
-  dragStart = null;
-  dragging = cropping = false;
+  dragging = false;
 }
       
 function drawCropOverlay() {
@@ -607,7 +603,7 @@ function generateText() {
                </svg>`;
 
   const mime = { type: 'image/svg+xml' };
-  const blob = new Blob([out], mime);
+  const blob = new Blob([svg], mime);
   const url  = URL.createObjectURL(blob);
   const img  = new Image();
 
