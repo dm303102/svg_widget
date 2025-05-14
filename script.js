@@ -102,7 +102,6 @@ const lengthSelect      = document.getElementById('lengthSelect');
 const widthSelect       = document.getElementById('widthSelect');
 const priceDisplay      = document.getElementById('priceDisplay');
 const fileInputContainer= document.getElementById('fileInputContainer');
-const renderBtn         = document.getElementById('renderBtn');
 const undoBtn           = document.getElementById('undoBtn');
 const exportBtn         = document.getElementById('exportBtn');
 const svgList           = document.getElementById('svgList');
@@ -138,7 +137,6 @@ function onCanvasClick(e) {
   }
 }
 canvas.addEventListener('click', onCanvasClick);
-renderBtn.addEventListener('click', redrawCanvas);
 exportBtn.addEventListener('click', exportSVG);
       
 function onUndoBtnClick() {
