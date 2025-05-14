@@ -741,4 +741,33 @@ function generateText() {
 });  // <-- closes WebFont.load({
 }      // <-- closes generateText()
 
+const url2        = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
+fetch(url2)
+  .then(res => {
+    if (!res.ok) {
+      // try to print the API’s own error message:
+      return res.json().then(errBody => {
+        console.error('Google Fonts API error', res.status, errBody);
+        throw new Error(errBody.error?.message || `HTTP ${res.status}`);
+      });
+    }
+    return res.json();
+  })
+  .then(data => {
+    console.log('Google Fonts response', data);
+    if (!Array.isArray(data.items)) {
+      console.error('No items array in response:', data);
+      return;
+    }
+    data.items.forEach(font => {
+      const opt = document.createElement('option');
+      opt.value = font.family;
+      opt.textContent = font.family;
+      fontSelect.appendChild(opt);
+    });
+  })
+  .catch(err => {
+    console.error('Couldn’t load Google Fonts list:', err);
+  });
+  
 });
