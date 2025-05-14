@@ -127,7 +127,44 @@ let cropStart  = null;
 // --- initial setup ---
 initLength();
 
-//Listener functions
+//functions
+function regenerateTextSVG(img) {
+  const font = img.fontFamily || 'Arial';
+  const size = img.fontSize     || 48;
+  // pull the raw text string out of the old svgText:
+  const match = img.svgText.match(/<text[^>]*>([^<]+)<\/text>/);
+  const text  = match ? match[1] : '';
+  // measure
+  const ctx2 = document.createElement('canvas').getContext('2d');
+  ctx2.font = `${size}px ${font}`;
+  const w = Math.ceil(ctx2.measureText(text).width);
+  const h = Math.ceil(size * 1.2);
+  // build fresh SVG
+  const newSvg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+  <style><![CDATA[
+    text { font-family: '${font}'; font-size: ${size}px; fill: #000; }
+  ]]></style>
+  <text x="0" y="${size}">${text}</text>
+</svg>`.trim();
+
+  // reload image
+  const blob = new Blob([newSvg], { type: 'image/svg+xml' });
+  const url  = URL.createObjectURL(blob);
+  const newImg = new Image();
+  newImg.onload = () => {
+    img.image      = newImg;
+    img.svgText    = newSvg;
+    img.origW      = newImg.width;
+    img.origH      = newImg.height;
+    img.fitScale   = 1;
+    img.scalePercent = 1;
+    URL.revokeObjectURL(url);
+    redrawCanvas();
+  };
+  newImg.src = url;
+}
+
 function getMousePos(evt) {
   const rect = canvas.getBoundingClientRect();
   return {
@@ -200,6 +237,14 @@ function onSvgListActionClick(e) {
     case 'delete':
       images = images.filter(img => img.id !== id);
       if (selectedId === id) selectedId = images[0]?.id || null;
+      break;
+    case 'change-font':
+      img.fontFamily = e.target.value;
+      regenerateTextSVG(img);
+      break;
+    case 'change-size':
+      img.fontSize = parseInt(e.target.value,10) || img.fontSize;
+      regenerateTextSVG(img);
       break;
      case 'scale':
       // set scalePercent to slider%
