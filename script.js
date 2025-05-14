@@ -575,48 +575,56 @@ function generateText() {
   const text = prompt('Enter text to turn into SVG:');
   if (!text) return;
 
-  const font     = fontSelect.value;
+  // 1) grab font & size from the controls
+  const font     = document.getElementById('fontSelect').value;
   const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10) || 48;
-  // measure width via offscreen canvas
+
+  // 2) measure how big the SVG needs to be
   const meas = document.createElement('canvas').getContext('2d');
   meas.font = `${fontSize}px ${font}`;
-  const textWidth  = meas.measureText(text).width;
-  const textHeight = fontSize * 1.2;
+  const textWidth  = Math.ceil(meas.measureText(text).width);
+  const textHeight = Math.ceil(fontSize * 1.2);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg"
-                    width="${textWidth}" height="${textHeight}">
-                 <text x="0" y="${fontSize}"
-                       font-family="${font}"
-                       font-size="${fontSize}px">
-                   ${text}
-                 </text>
-               </svg>`;
+  // 3) build an SVG string with an inline <style> that forces our font + size + fill
+  const svg = `
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="${textWidth}" height="${textHeight}">
+  <style><![CDATA[
+    text {
+      font-family: '${font}';
+      font-size: ${fontSize}px;
+      fill: #000;
+    }
+  ]]></style>
+  <text x="0" y="${fontSize}">${text}</text>
+</svg>`.trim();
 
-  const mime = { type: 'image/svg+xml' };
-  const blob = new Blob([svg], mime);
+  // 4) make a blob‑URL and load it into an Image()
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
   const url  = URL.createObjectURL(blob);
   const img  = new Image();
 
   img.onload = () => {
-  const newImage = {
-    id:           Date.now().toString(36),
-    filename:     `text_${text}.svg`,
-    svgText:      svg,
-    origW:        img.width,
-    origH:        img.height,
-    fitScale:     1,
-    scalePercent: 1,
-    rotation:     0,
-    x:            borderPx + (canvas.width/2 - img.width/2),
-    y:            borderPx + (canvas.height/2 - img.height/2),
-    image:        img       // ← here’s the crucial bit
+    // 5) push a proper image record (with .image) and label it with font+size
+    const newImage = {
+      id:           Date.now().toString(36),
+      filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
+      svgText:      svg,
+      origW:        img.width,
+      origH:        img.height,
+      fitScale:     1,
+      scalePercent: 1,
+      rotation:     0,
+      x:            borderPx + (canvas.width/2 - img.width/2),
+      y:            borderPx + (canvas.height/2 - img.height/2),
+      image:        img
+    };
+    images.push(newImage);
+    updateList();
+    redrawCanvas();
+    URL.revokeObjectURL(url);
   };
-  images.push(newImage);
-  updateList();
-  redrawCanvas();
-  URL.revokeObjectURL(url);
-};
-      
+
   img.src = url;
 }
 
