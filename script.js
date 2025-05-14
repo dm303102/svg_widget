@@ -1,3 +1,8 @@
+let dragging   = false;
+let cropping   = false;
+let cropStart  = null;
+let dragOffset = { x:0, y:0 };
+
 function getMousePos(evt) {
   const rect = canvas.getBoundingClientRect();
   return {
@@ -120,7 +125,6 @@ initLength();
 //Listener functions
 function toggleCrop() {
   cropping = !cropping;
-  cropStart  = null;              // ← clear any pending crop
   cropBtn.textContent = cropping ? 'Cancel Cropping' : 'Crop';
   canvas.style.cursor  = cropping ? 'crosshair' : 'default';
   redrawCanvas();
@@ -505,16 +509,15 @@ function onMouseMove(e) {
   }
 }
 function onMouseUp() {
+  if (dragging) {
+    updateList();
+    redrawCanvas();
+  }
   if (cropping && cropStart) {
     finalizeCrop();
     cropStart = null;
   }
   dragStart = null;
-  
-  if (dragging) {
-    updateList();
-    redrawCanvas();
-  }
   dragging = cropping = false;
 }
       
