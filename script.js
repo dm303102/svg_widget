@@ -1,3 +1,19 @@
+const DPI = 96;                   // adjust to actual cutter DPI (e.g. 300)
+const MIN_CUT_INCHES = 0.001;     // your minimum cuttable feature
+const MAX_SCALE = 10;             // allow up to 1000% zoom
+
+function getMinScalePercent(img) {
+  // number of pixels that corresponds to your min cut size
+  const minPx = MIN_CUT_INCHES * DPI;
+  // if width * fitScale * scalePercent < minPx ⇒ too small
+  // so scalePercent >= minPx / (origW * fitScale)
+  return minPx / (img.origW * img.fitScale);
+}
+
+function clamp(val, min, max) {
+  return Math.min(max, Math.max(min, val));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 const canvas            = document.getElementById('mainCanvas');
 const ctx               = canvas.getContext('2d');
@@ -151,7 +167,15 @@ function onSvgListActionClick(e) {
   const id = li.dataset.id;
   if (action === 'scale') {
     const pct = +e.target.value / 100;
-    it.scalePercent = pct;
+    const img = images.find(i => i.id === selectedId);
+    if (!img) return;
+      
+      let minS = getMinScalePercent(img);
+      img.scalePercent = clamp(
+        img.scalePercent + 0.1,  // delta (or –0.1 for zoom out)
+        minS,                    // never below the cutter’s limit
+        MAX_SCALE                // never above 10×
+      );
   }  
   
   switch (action) {
