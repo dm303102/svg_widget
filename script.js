@@ -1,12 +1,6 @@
-function getMousePos(evt) {
-  const rect = canvas.getBoundingClientRect();
-  return {
-    x: (evt.clientX - rect.left) * (canvas.width  / rect.width),
-    y: (evt.clientY - rect.top ) * (canvas.height / rect.height)
-  };
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+const canvas            = document.getElementById('mainCanvas');
+const ctx               = canvas.getContext('2d');
 // --- configuration & DOM refs ---
 const variants = [
       { length: 4, width: 4, price: 12.00 },
@@ -106,8 +100,6 @@ const undoBtn           = document.getElementById('undoBtn');
 const exportBtn         = document.getElementById('exportBtn');
 const svgList           = document.getElementById('svgList');
 const fileInput         = document.getElementById('fileInput');
-const canvas            = document.getElementById('mainCanvas');
-const ctx               = canvas.getContext('2d');
 
 let images = [], selectedId = null, history = [];
 let dragging = false, cropping = false;
@@ -118,6 +110,14 @@ let cropStart  = null;
 initLength();
 
 //Listener functions
+function getMousePos(evt) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: (evt.clientX - rect.left) * (canvas.width  / rect.width),
+    y: (evt.clientY - rect.top ) * (canvas.height / rect.height)
+  };
+}
+  
 function onCanvasClick(e) {
   const { x, y } = getMousePos(e);
   // search from topmost to bottom
