@@ -186,6 +186,22 @@ function getMousePos(evt) {
   };
 }
 
+await (async function loadFonts() {
+  try {
+    const res  = await fetch(url2);
+    const data = await res.json();
+    data.items.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.family;
+      opt.textContent = f.family;
+      fontSelect.appendChild(opt);
+    });
+    updateList();  // rebuild rows now that fontSelect is fully populated
+  } catch (e) {
+    console.error('Couldn’t load Google Fonts', e);
+  }
+})();
+  
 //Listener Functions
 textBtn.addEventListener('click', generateText);
 
@@ -483,9 +499,8 @@ function updateList() {
         pushHistory();
         WebFont.load({
           google: { families: [ it.fontFamily ] },
-          active: () => {
-            regenerateTextSVG(it);
-          }
+          active:   () => regenerateTextSVG(it),
+          inactive: () => regenerateTextSVG(it)
       });
     });
     ctr.appendChild(fontSel);
@@ -502,9 +517,8 @@ function updateList() {
       pushHistory();
       WebFont.load({
         google: { families: [ it.fontFamily ] },
-        active: () => {
-          regenerateTextSVG(it);
-        }
+        active:   () => regenerateTextSVG(it),
+        inactive: () => regenerateTextSVG(it)
       });
     });
     ctr.appendChild(sizeIn);
@@ -788,66 +802,60 @@ function generateText() {
   const font     = fontSelect.value;
   const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10) || 48;
 
-  // 2) wait for the font to load
+  function buildSVG() {
+    // measure true bounds…
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = `${fontSize}px ${font}`;
+    const m       = ctx.measureText(text);
+    const left    = m.actualBoundingBoxLeft,
+          right   = m.actualBoundingBoxRight,
+          ascent  = m.actualBoundingBoxAscent,
+          descent = m.actualBoundingBoxDescent;
+    const w = Math.ceil(left + right),
+          h = Math.ceil(ascent + descent);
+
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" ' +
+                `width="${w}" height="${h}" ` +
+                `viewBox="${-left} 0 ${w} ${h}">` +
+                '<style>text{' +
+                  `font-family:"${font}";` +
+                  `font-size:${fontSize}px;` +
+                  'fill:#000;' +
+                '}</style>' +
+                `<text x="0" y="${ascent}">${text}</text>` +
+              '</svg>';
+
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url  = URL.createObjectURL(blob);
+    const img  = new Image();
+    img.onload = () => {
+      images.push({
+        id:           Date.now().toString(36),
+        filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
+        svgText:      svg,
+        origW:        w,
+        origH:        h,
+        fitScale:     1,
+        scalePercent: 1,
+        rotation:     0,
+        fontFamily:   font,
+        fontSize:     fontSize,
+        x:            borderPx + (canvas.width/2 - w/2),
+        y:            borderPx + (canvas.height/2 - h/2),
+        image:        img
+      });
+      updateList();
+      redrawCanvas();
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  // 2) Always call buildSVG after attempting to load the font
   WebFont.load({
-    google: { families: [ font ] },
-    active: () => {
-      // 3) measure true text bounds
-      const ctx = document.createElement('canvas').getContext('2d');
-      ctx.font = `${fontSize}px ${font}`;
-      const m       = ctx.measureText(text);
-      const left    = m.actualBoundingBoxLeft;
-      const right   = m.actualBoundingBoxRight;
-      const ascent  = m.actualBoundingBoxAscent;
-      const descent = m.actualBoundingBoxDescent;
-      const w       = Math.ceil(left + right);
-      const h       = Math.ceil(ascent + descent);
-
-      // 4) build a one‑liner SVG with inline style and viewBox
-      const svg = 
-        '<svg xmlns="http://www.w3.org/2000/svg" ' +
-             'width="'  + w + '" ' +
-             'height="' + h + '" ' +
-             'viewBox="' + (-left) + ' 0 ' + w + ' ' + h + '">' +
-          '<style>text{' +
-             'font-family:"' + font + '";' +
-             'font-size:'     + fontSize + 'px;' +
-             'fill:#000;' +
-          '}</style>' +
-          '<text x="0" y="' + ascent + '">' +
-            text +
-          '</text>' +
-        '</svg>';
-
-      // 5) load it into an Image and push with all metadata
-      const blob = new Blob([svg], { type: 'image/svg+xml' });
-      const url  = URL.createObjectURL(blob);
-      const img  = new Image();
-
-      img.onload = () => {
-        const newImage = {
-          id:           Date.now().toString(36),
-          filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
-          svgText:      svg,
-          origW:        w,
-          origH:        h,
-          fitScale:     1,
-          scalePercent: 1,
-          rotation:     0,
-          fontFamily:   font,       // record these!
-          fontSize:     fontSize,
-          x:            borderPx + (canvas.width/2 - w/2),
-          y:            borderPx + (canvas.height/2 - h/2),
-          image:        img
-        };
-        images.push(newImage);
-        updateList();
-        redrawCanvas();
-        URL.revokeObjectURL(url);
-      };
-
-      img.src = url;
-    }
+    google:  { families: [ font ] },
+    active:   buildSVG,
+    inactive: buildSVG
   });
 }
 
