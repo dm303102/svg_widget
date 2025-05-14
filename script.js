@@ -170,12 +170,10 @@ function regenerateTextSVG(img) {
     img.svgText    = newSvg;
     img.origW      = newImg.width;
     img.origH      = newImg.height;
-    img.image      = newImg;
-    img.svgText    = newSvg;
-    img.origW      = newImg.width;
-    img.origH      = newImg.height;
-    URL.revokeObjectURL(url);
+    updateList();
+    selectImage(img.id);
     redrawCanvas();
+    URL.revokeObjectURL(url);
   };
   newImg.src = url;
 }
