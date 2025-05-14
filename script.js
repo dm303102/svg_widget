@@ -627,8 +627,6 @@ function finalizeCrop() {
   };
   newImg.src = tmp.toDataURL();
 }
-
-const fontSelect = document.getElementById('fontSelect');
 const textBtn    = document.getElementById('textBtn');
 textBtn.addEventListener('click', generateText);
 
