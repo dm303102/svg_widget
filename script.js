@@ -1,6 +1,6 @@
 const DPI = 96;                   // adjust to actual cutter DPI (e.g. 300)
 const MIN_CUT_INCHES = 0.001;     // your minimum cuttable feature
-const MAX_SCALE = 10;             // allow up to 1000% zoom
+const MAX_SCALE = 40;             // allow up to 1000% zoom
 
 function getMinScalePercent(img) {
   // number of pixels that corresponds to your min cut size
