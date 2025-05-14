@@ -217,10 +217,10 @@ fileInput.addEventListener('change', handleFileLoad);
 
 function onSvgListActionClick(e) {
   const action = e.target.dataset.action;
+  if (!action) return;   
   const li     = e.target.closest('li');
-  const it     = images.find(img => img.id === li.dataset.id);
-
   if (!li) return;
+  const it     = images.find(img => img.id === li.dataset.id);
   const id = li.dataset.id;
   
   switch (action) {
@@ -254,14 +254,6 @@ function onSvgListActionClick(e) {
       images = images.filter(img => img.id !== id);
       if (selectedId === id) selectedId = images[0]?.id || null;
       break;
-    case 'change-font':
-      it.fontFamily = e.target.value;
-      regenerateTextSVG(it);
-      break;
-    case 'change-size':
-      it.fontSize = parseInt(e.target.value,10) || it.fontSize;
-      regenerateTextSVG(it);
-      break;
      case 'scale':
       // set scalePercent to slider%
       const pct = +e.target.value / 100;
@@ -279,13 +271,16 @@ function onSvgListActionClick(e) {
   
 //svgList.addEventListener('click', onSvgListActionClick);
 //svgList.addEventListener('input', onSvgListActionClick);
-['click','input','change'].forEach(ev =>
+['click','input'].forEach(ev =>
   svgList.addEventListener(ev, onSvgListActionClick)
 );
 
 function onSvgListSelectClick(e) {
-  const btn = e.target.closest('button, input[type=range]');
-  if (btn) return;    // handled above
+  // ignore clicks on buttons, sliders, selects or number inputs
+  const ctrl = e.target.closest(
+    'button, input[type=range], select, input[type=number]'
+  );
+  if (ctrl) return;
   const li = e.target.closest('li');
   if (!li) return;
   selectImage(li.dataset.id);
@@ -409,7 +404,7 @@ function redrawCanvas() {
 
 function updateList() {
   svgList.innerHTML = '';
-  const masterOpts = Array.from(fontSelect.options).map(o => o.value);
+  const families = Array.from(fontSelect.options).map(o => o.value);
   
   for (const it of images) {
     const li = document.createElement('li');
@@ -478,16 +473,22 @@ function updateList() {
 
     if (it.svgText && it.svgText.includes('<text')) {
     // FONT SELECT
-    const fontSel = document.createElement('select');
-    fontSel.dataset.action = 'change-font';
-    // list your fonts here (or populate dynamically)
-    for (const family of masterOpts) {
-      const o = document.createElement('option');
-      o.value = family;
-      o.textContent = family;
-      if (it.fontFamily === family) o.selected = true;
-      fontSel.appendChild(o);
-    }
+      const fontSel = document.createElement('select');
+      fontSel.dataset.action = 'change-font';
+      // list your fonts here (or populate dynamically)
+      for (const family of families) {
+        const o = document.createElement('option');
+        o.value = family;
+        o.textContent = family;
+        if (it.fontFamily === family) o.selected = true;
+        fontSel.appendChild(o);
+        }
+      fontSel.addEventListener('change', ev => {
+      it.fontFamily = ev.target.value;
+      regenerateTextSVG(it);
+      pushHistory();
+      redrawCanvas();
+    });
     ctr.appendChild(fontSel);
 
     // SIZE INPUT
@@ -497,7 +498,12 @@ function updateList() {
     sizeIn.max            = 200;
     sizeIn.value          = it.fontSize || 48;
     sizeIn.style.width    = '4rem';
-    sizeIn.dataset.action = 'change-size';
+    sizeIn.addEventListener('change', ev => {
+      it.fontSize = parseInt(ev.target.value,10) || it.fontSize;
+      regenerateTextSVG(it);
+      pushHistory();
+      redrawCanvas();
+    });
     ctr.appendChild(sizeIn);
   }
  }
