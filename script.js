@@ -137,16 +137,22 @@ function regenerateTextSVG(img) {
   // measure
   const ctx2 = document.createElement('canvas').getContext('2d');
   ctx2.font = `${size}px ${font}`;
-  const w = Math.ceil(ctx2.measureText(text).width);
-  const h = Math.ceil(size * 1.2);
-  // build fresh SVG
+  const metrics    = ctx2.measureText(text);
+  const w          = Math.ceil(metrics.width);
+  const ascent     = Math.ceil(metrics.actualBoundingBoxAscent);
+  const descent    = Math.ceil(metrics.actualBoundingBoxDescent);
+  const h          = ascent + descent;
   const newSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
-  <style><![CDATA[
-    text { font-family: '${font}'; font-size: ${size}px; fill: #000; }
-  ]]></style>
-  <text x="0" y="${size}">${text}</text>
-</svg>`.trim();
+  <svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+    <style><![CDATA[
+      text {
+        font-family: '${font}';
+        font-size: ${size}px;
+        fill: #000;
+      }
+    ]]></style>
+    <text x="0" y="${ascent}">${text}</text>
+  </svg>`.trim();
 
   // reload image
   const blob = new Blob([newSvg], { type: 'image/svg+xml' });
@@ -767,47 +773,52 @@ function generateText() {
       // measure text on canvas
       const ctx2 = document.createElement('canvas').getContext('2d');
       ctx2.font = `${fontSize}px ${font}`;
-      const textWidth  = Math.ceil(ctx2.measureText(text).width);
-      const textHeight = Math.ceil(fontSize * 1.2);
+      const metrics       = ctx2.measureText(text);
+      const textWidth     = Math.ceil(metrics.width);
+      const ascent        = Math.ceil(metrics.actualBoundingBoxAscent);
+      const descent       = Math.ceil(metrics.actualBoundingBoxDescent);
+      const textHeight    = ascent + descent;
 
       // build SVG with inline attributes
       const svg = `
       <svg xmlns="http://www.w3.org/2000/svg"
            width="${textWidth}" height="${textHeight}">
-        <text x="0" y="${fontSize}"
-              font-family="${font}"
-              font-size="${fontSize}px"
-              fill="#000">
-          ${text}
-        </text>
+        <style><![CDATA[
+          text {
+            font-family: '${font}';
+            font-size: ${fontSize}px;
+            fill: #000;
+          }
+        ]]></style>
+        <text x="0" y="${ascent}">${text}</text>
       </svg>`.trim();
-        
-  // load into an Image
-  const blob = new Blob([svg], { type: 'image/svg+xml' });
-  const url  = URL.createObjectURL(blob);
-  const img  = new Image();
-
-  img.onload = () => {
-    const newImage = {
-      id:           Date.now().toString(36),
-      filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
-      svgText:      svg,
-      origW:        img.width,
-      origH:        img.height,
-      fitScale:     1,
-      scalePercent: 1,
-      rotation:     0,
-      x:            borderPx + (canvas.width/2 - img.width/2),
-      y:            borderPx + (canvas.height/2 - img.height/2),
-      image:        img
-    };
-    images.push(newImage);
-    updateList();
-    redrawCanvas();
-    URL.revokeObjectURL(url);
-  };
-  img.src = url;
-   }
+              
+      // load into an Image
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url  = URL.createObjectURL(blob);
+      const img  = new Image();
+    
+      img.onload = () => {
+        const newImage = {
+          id:           Date.now().toString(36),
+          filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
+          svgText:      svg,
+          origW:        img.width,
+          origH:        img.height,
+          fitScale:     1,
+          scalePercent: 1,
+          rotation:     0,
+          x:            borderPx + (canvas.width/2 - img.width/2),
+          y:            borderPx + (canvas.height/2 - img.height/2),
+          image:        img
+        };
+        images.push(newImage);
+        updateList();
+        redrawCanvas();
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
 });  // <-- closes WebFont.load({
 }      // <-- closes generateText()
 
