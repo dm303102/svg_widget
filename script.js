@@ -143,16 +143,23 @@ function regenerateTextSVG(img) {
   const ascent  = metrics.actualBoundingBoxAscent;
   const descent = metrics.actualBoundingBoxDescent;
   
-  const w = Math.ceil(left + right);
-  const h = Math.ceil(ascent + descent);
-
+  const w = left + right;
+  const h = ascent + descent;
+  
+  // One‑liner, no stray newlines/indent:
   const newSvg = 
-    `<svg xmlns="http://www.w3.org/2000/svg" ` +
-     `width="${w}" height="${h}" viewBox="${-left} 0 ${w} ${h}">` +
-      `<style>text{font-family:'${font}';font-size:${fontSize}px;fill:#000;}</style>` +
-      `<text x="0" y="${ascent}">${text}</text>` +
-    `</svg>`;
-
+    '<svg xmlns="http://www.w3.org/2000/svg" ' +
+         'width="'  + w + '" ' +
+         'height="' + h + '" ' +
+         'viewBox="' + (-left) + ' 0 ' + w + ' ' + h + '">' +
+      '<text x="0" y="' + ascent + '"' +
+            ' font-family="' + font + '"' +
+            ' font-size="'     + fontSize + 'px"' +
+            ' fill="#000">' +
+        text +
+      '</text>' +
+    '</svg>';
+  
   // reload image
   const blob = new Blob([newSvg], { type: 'image/svg+xml' });
   const url  = URL.createObjectURL(blob);
@@ -776,16 +783,22 @@ function generateText() {
       const ascent  = metrics.actualBoundingBoxAscent;
       const descent = metrics.actualBoundingBoxDescent;
       
-      const w = Math.ceil(left + right);
-      const h = Math.ceil(ascent + descent);
-
-      // build SVG with inline attributes
+      const w = left + right;
+      const h = ascent + descent;
+      
+      // One‑liner, no stray newlines/indent:
       const svg = 
-        `<svg xmlns="http://www.w3.org/2000/svg" ` +
-         `width="${w}" height="${h}" viewBox="${-left} 0 ${w} ${h}">` +
-          `<style>text{font-family:'${font}';font-size:${fontSize}px;fill:#000;}</style>` +
-          `<text x="0" y="${ascent}">${text}</text>` +
-        `</svg>`;
+        '<svg xmlns="http://www.w3.org/2000/svg" ' +
+             'width="'  + w + '" ' +
+             'height="' + h + '" ' +
+             'viewBox="' + (-left) + ' 0 ' + w + ' ' + h + '">' +
+          '<text x="0" y="' + ascent + '"' +
+                ' font-family="' + font + '"' +
+                ' font-size="'     + fontSize + 'px"' +
+                ' fill="#000">' +
+            text +
+          '</text>' +
+        '</svg>';
                      
       // load into an Image
       const blob = new Blob([svg], { type: 'image/svg+xml' });
