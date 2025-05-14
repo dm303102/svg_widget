@@ -14,7 +14,7 @@ function clamp(val, min, max) {
   return Math.min(max, Math.max(min, val));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', **async** () => {
 const canvas            = document.getElementById('mainCanvas');
 const ctx               = canvas.getContext('2d');
 // --- configuration & DOM refs ---
