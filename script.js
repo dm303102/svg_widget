@@ -422,9 +422,26 @@ function toCanvasCoords(e) {
   return { x: e.clientX - r.left, y: e.clientY - r.top };
 }
 function hitTest(img, x, y) {
-  const w = img.origW * img.fitScale * img.scalePercent;
-  const h = img.origH * img.fitScale * img.scalePercent;
-  return x >= img.x && x <= img.x + w && y >= img.y && y <= img.y + h;
+  // full drawn size
+  const dW = img.origW * img.fitScale * img.scalePercent;
+  const dH = img.origH * img.fitScale * img.scalePercent;
+  // center of the image on canvas
+  const cx = img.x + dW/2;
+  const cy = img.y + dH/2;
+
+  // vector from center to click
+  const dx = x - cx;
+  const dy = y - cy;
+
+  // rotate that vector by –rotation
+  const cos = Math.cos(-img.rotation);
+  const sin = Math.sin(-img.rotation);
+  const lx  = dx * cos - dy * sin;
+  const ly  = dx * sin + dy * cos;
+
+  // now see if it lies within the axis‑aligned box
+  return lx >= -dW/2 && lx <= dW/2
+      && ly >= -dH/2 && ly <= dH/2;
 }
 function onMouseDown(e) {
   const { x, y } = toCanvasCoords(e);
