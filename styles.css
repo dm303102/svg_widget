@@ -38,7 +38,9 @@ h1 {
 }
 
 .filename {
-  flex: 3 1 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Inputs & sliders */
