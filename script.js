@@ -137,22 +137,21 @@ function regenerateTextSVG(img) {
   // measure
   const ctx2 = document.createElement('canvas').getContext('2d');
   ctx2.font = `${size}px ${font}`;
-  const metrics    = ctx2.measureText(text);
-  const w          = Math.ceil(metrics.width);
-  const ascent     = Math.ceil(metrics.actualBoundingBoxAscent);
-  const descent    = Math.ceil(metrics.actualBoundingBoxDescent);
-  const h          = ascent + descent;
-  const newSvg = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
-    <style><![CDATA[
-      text {
-        font-family: '${font}';
-        font-size: ${size}px;
-        fill: #000;
-      }
-    ]]></style>
-    <text x="0" y="${ascent}">${text}</text>
-  </svg>`.trim();
+  const metrics = ctx2.measureText(text);
+  const left    = metrics.actualBoundingBoxLeft;
+  const right   = metrics.actualBoundingBoxRight;
+  const ascent  = metrics.actualBoundingBoxAscent;
+  const descent = metrics.actualBoundingBoxDescent;
+  
+  const w = Math.ceil(left + right);
+  const h = Math.ceil(ascent + descent);
+
+  const newSvg = 
+    `<svg xmlns="http://www.w3.org/2000/svg" ` +
+     `width="${w}" height="${h}" viewBox="${-left} 0 ${w} ${h}">` +
+      `<style>text{font-family:'${font}';font-size:${fontSize}px;fill:#000;}</style>` +
+      `<text x="0" y="${ascent}">${text}</text>` +
+    `</svg>`;
 
   // reload image
   const blob = new Blob([newSvg], { type: 'image/svg+xml' });
