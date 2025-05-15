@@ -187,9 +187,8 @@ function getMousePos(evt) {
 }
 
 function loadFonts() {
-  try {
-    const res  = await fetch(url2);
-    const data = await res.json();
+    const res  = fetch(url2);
+    const data = res.json();
     data.items.forEach(f => {
       const opt = document.createElement('option');
       opt.value = f.family;
@@ -197,10 +196,7 @@ function loadFonts() {
       fontSelect.appendChild(opt);
     });
     updateList();  // rebuild rows now that fontSelect is fully populated
-  } catch (e) {
-    console.error('Couldn’t load Google Fonts', e);
-  }
-})();
+} 
   
 //Listener Functions
 textBtn.addEventListener('click', generateText);
