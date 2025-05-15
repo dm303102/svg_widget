@@ -875,10 +875,3 @@ fetch(url2)
     .catch(err => console.error('Couldn’t load Google Fonts list:', err));  
 init();
 });
-
-async function init() {
-  await loadFonts();       
-  updateList();          
-  textBtn.addEventListener('click', generateText);
-  // wire up all the rest of your listeners…
-}
