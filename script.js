@@ -186,18 +186,6 @@ function getMousePos(evt) {
   };
 }
 
-function loadFonts() {
-    const res  = fetch(url2);
-    const data = res.json();
-    data.items.forEach(f => {
-      const opt = document.createElement('option');
-      opt.value = f.family;
-      opt.textContent = f.family;
-      fontSelect.appendChild(opt);
-    });
-    updateList();  // rebuild rows now that fontSelect is fully populated
-} 
-  
 //Listener Functions
 textBtn.addEventListener('click', generateText);
 
@@ -499,6 +487,27 @@ function updateList() {
           inactive: () => regenerateTextSVG(it)
       });
     });
+
+    // keep the dropdown focused so arrow keys stay inside it
+    fontSel.addEventListener('keydown', e => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const opts = Array.from(fontSel.options);
+          const idx  = opts.findIndex(o => o.value === fontSel.value);
+          const newIdx = e.key === 'ArrowDown'
+                       ? Math.min(idx + 1, opts.length - 1)
+                       : Math.max(idx - 1, 0);
+          if (newIdx !== idx) {
+            fontSel.selectedIndex = newIdx;
+            fontSel.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+      });
+
+    // when this row is rebuilt, put focus into its font‐picker
+    fontSel.tabIndex = 0;
+    fontSel.focus();
+          
     ctr.appendChild(fontSel);
 
     // SIZE INPUT
