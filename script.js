@@ -602,8 +602,7 @@ function exportSVG() {
     .parseFromString(it.svgText,'image/svg+xml')
     .documentElement.innerHTML}
     </svg>`;
-    }
-
+    
     out += `</svg>`;
       
     // center about which we rotate
@@ -637,8 +636,6 @@ function exportSVG() {
         </svg>
       </g>
     `;
-  }
-
   out += `</svg>`;
 
   const mime = { type: 'image/svg+xml' };
