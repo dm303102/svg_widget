@@ -869,5 +869,4 @@ fetch(url2)
       updateList();
     })
     .catch(err => console.error('Couldn’t load Google Fonts list:', err));  
-init();
 });
