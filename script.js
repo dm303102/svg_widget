@@ -226,7 +226,7 @@ const variants = [
 ];
 
 const ROTATION_STEP = Math.PI / 12; // 15°
-const DPI = 96, borderPx = 4;
+const borderPx = 4;
 const lengthSelect      = document.getElementById('lengthSelect');
 const widthSelect       = document.getElementById('widthSelect');
 const priceDisplay      = document.getElementById('priceDisplay');
