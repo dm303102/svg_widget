@@ -3,6 +3,137 @@ const MIN_CUT_INCHES = 0.001;     // your minimum cuttable feature
 const MAX_SCALE = 40;             // allow up to 1000% zoom
 
 document.addEventListener('DOMContentLoaded', () => {
+  const url2 = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
+  fetch(url2)
+    .then(res => res.json())
+    .then(data => {
+      // sort alphabetically:
+      data.items.sort((a, b) => a.family.localeCompare(b.family));
+      for (const font of data.items) {
+        const opt = document.createElement('option');
+        opt.value = opt.textContent = font.family;
+        fontSelect.appendChild(opt);
+      }
+      updateList();  // rebuild all rows, now that fontSelect is populated
+    })
+    .catch(err => console.error('Couldn’t load Google Fonts list:', err));
+
+//Listener Functions
+textBtn.addEventListener('click', generateText);
+
+function onCanvasClick(e) {
+  const { x, y } = getMousePos(e);
+  // search from topmost to bottom
+  for (let i = images.length - 1; i >= 0; i--) {
+    if (hitTest(images[i], x, y)) {
+      selectImage(images[i].id);
+      break;
+    }
+  }
+}
+canvas.addEventListener('click', onCanvasClick);
+exportBtn.addEventListener('click', exportSVG);
+      
+function onUndoBtnClick() {
+  if (!history.length) return;
+  images = history.pop();
+  selectImage(images[0]?.id);
+}
+undoBtn.addEventListener('click', onUndoBtnClick);
+                         
+lengthSelect.addEventListener('change', onLengthChange);
+widthSelect.addEventListener('change', onWidthChange);
+fileInput.addEventListener('change', handleFileLoad);
+
+function onSvgListActionClick(e) {
+  const action = e.target.dataset.action;
+  if (!action || action === 'change-font' || action === 'change-size') return;   
+  const li     = e.target.closest('li');
+  if (!li) return;
+  const it     = images.find(img => img.id === li.dataset.id);
+  const id = li.dataset.id;
+  
+  switch (action) {
+     case 'align-left':
+      // snap to left border
+      it.x = borderPx;
+      break;
+    case 'align-center':
+      const dW = it.origW * it.fitScale * it.scalePercent;
+      // center in the full canvas:
+      it.x = (canvas.width - dW) / 2;
+      break;
+    case 'align-right':
+      // snap to right border
+      {
+       const dW = it.origW * it.fitScale * it.scalePercent;
+        it.x = canvas.width - borderPx - dW;
+      }
+      break;
+    case 'rotate-left':
+      it.rotation -= ROTATION_STEP;
+      break;
+    case 'rotate-right':
+      it.rotation += ROTATION_STEP;
+      break;
+    case 'duplicate':
+      const copy = { ...it, id: Date.now() + '_' + Math.random() };
+      images.push(copy);
+      break;
+    case 'delete':
+      images = images.filter(img => img.id !== id);
+      if (selectedId === id) selectedId = images[0]?.id || null;
+      break;
+     case 'scale':
+      // set scalePercent to slider%
+      const pct = +e.target.value / 100;
+      const img = images.find(i => i.id === selectedId);
+      if (!img) return;
+        const minS = getMinScalePercent(img);
+      img.scalePercent = clamp(pct, minS, MAX_SCALE);
+      pushHistory();
+      redrawCanvas();
+      return;  // don’t fall through to switch
+  }
+  pushHistory();
+  selectImage(selectedId || images[0]?.id);
+}
+  
+//svgList.addEventListener('click', onSvgListActionClick);
+//svgList.addEventListener('input', onSvgListActionClick);
+['click','input'].forEach(ev =>
+  svgList.addEventListener(ev, onSvgListActionClick)
+);
+
+function onSvgListSelectClick(e) {
+  // ignore clicks on buttons, sliders, selects or number inputs
+  if (e.target.closest('button, input, select')) return;
+  const li = e.target.closest('li');
+  if (!li) return;
+  selectImage(li.dataset.id);
+}
+svgList.addEventListener('click', onSvgListSelectClick);
+
+const cropBtn = document.getElementById('cropBtn');
+
+// toggle crop‑mode on/off
+function onCropBtnClick() {
+    cropping = !cropping;
+    // give user visual feedback:
+    cropBtn.textContent = cropping ? 'Cancel Crop' : 'Crop';
+    canvas.style.cursor = cropping ? 'crosshair' : 'default';
+   }
+
+  cropBtn.addEventListener('click', onCropBtnClick);
+  // canvas mouse handlers (make sure these run _after_ that toggle above)
+  // canvas dragging & cropping
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('mousemove', onMouseMove);
+  ['mouseup','mouseleave'].forEach(evt =>
+    canvas.addEventListener(evt, onMouseUp)
+  );      
+});
+
 const canvas            = document.getElementById('mainCanvas');
 const ctx               = canvas.getContext('2d');
 // --- configuration & DOM refs ---
@@ -185,121 +316,6 @@ function getMousePos(evt) {
     y: (evt.clientY - rect.top ) * (canvas.height / rect.height)
   };
 }
-
-//Listener Functions
-textBtn.addEventListener('click', generateText);
-
-function onCanvasClick(e) {
-  const { x, y } = getMousePos(e);
-  // search from topmost to bottom
-  for (let i = images.length - 1; i >= 0; i--) {
-    if (hitTest(images[i], x, y)) {
-      selectImage(images[i].id);
-      break;
-    }
-  }
-}
-canvas.addEventListener('click', onCanvasClick);
-exportBtn.addEventListener('click', exportSVG);
-      
-function onUndoBtnClick() {
-  if (!history.length) return;
-  images = history.pop();
-  selectImage(images[0]?.id);
-}
-undoBtn.addEventListener('click', onUndoBtnClick);
-                         
-lengthSelect.addEventListener('change', onLengthChange);
-widthSelect.addEventListener('change', onWidthChange);
-fileInput.addEventListener('change', handleFileLoad);
-
-function onSvgListActionClick(e) {
-  const action = e.target.dataset.action;
-  if (!action || action === 'change-font' || action === 'change-size') return;   
-  const li     = e.target.closest('li');
-  if (!li) return;
-  const it     = images.find(img => img.id === li.dataset.id);
-  const id = li.dataset.id;
-  
-  switch (action) {
-     case 'align-left':
-      // snap to left border
-      it.x = borderPx;
-      break;
-    case 'align-center':
-      const dW = it.origW * it.fitScale * it.scalePercent;
-      // center in the full canvas:
-      it.x = (canvas.width - dW) / 2;
-      break;
-    case 'align-right':
-      // snap to right border
-      {
-       const dW = it.origW * it.fitScale * it.scalePercent;
-        it.x = canvas.width - borderPx - dW;
-      }
-      break;
-    case 'rotate-left':
-      it.rotation -= ROTATION_STEP;
-      break;
-    case 'rotate-right':
-      it.rotation += ROTATION_STEP;
-      break;
-    case 'duplicate':
-      const copy = { ...it, id: Date.now() + '_' + Math.random() };
-      images.push(copy);
-      break;
-    case 'delete':
-      images = images.filter(img => img.id !== id);
-      if (selectedId === id) selectedId = images[0]?.id || null;
-      break;
-     case 'scale':
-      // set scalePercent to slider%
-      const pct = +e.target.value / 100;
-      const img = images.find(i => i.id === selectedId);
-      if (!img) return;
-        const minS = getMinScalePercent(img);
-      img.scalePercent = clamp(pct, minS, MAX_SCALE);
-      pushHistory();
-      redrawCanvas();
-      return;  // don’t fall through to switch
-  }
-  pushHistory();
-  selectImage(selectedId || images[0]?.id);
-}
-  
-//svgList.addEventListener('click', onSvgListActionClick);
-//svgList.addEventListener('input', onSvgListActionClick);
-['click','input'].forEach(ev =>
-  svgList.addEventListener(ev, onSvgListActionClick)
-);
-
-function onSvgListSelectClick(e) {
-  // ignore clicks on buttons, sliders, selects or number inputs
-  if (e.target.closest('button, input, select')) return;
-  const li = e.target.closest('li');
-  if (!li) return;
-  selectImage(li.dataset.id);
-}
-svgList.addEventListener('click', onSvgListSelectClick);
-
-const cropBtn = document.getElementById('cropBtn');
-
-// toggle crop‑mode on/off
-function onCropBtnClick() {
-    cropping = !cropping;
-    // give user visual feedback:
-    cropBtn.textContent = cropping ? 'Cancel Crop' : 'Crop';
-    canvas.style.cursor = cropping ? 'crosshair' : 'default';
-   }
-
-  cropBtn.addEventListener('click', onCropBtnClick);
-  // canvas mouse handlers (make sure these run _after_ that toggle above)
-  // canvas dragging & cropping
-  canvas.addEventListener('mousedown', onMouseDown);
-  canvas.addEventListener('mousemove', onMouseMove);
-  ['mouseup','mouseleave'].forEach(evt =>
-    canvas.addEventListener(evt, onMouseUp)
-  );
       
 // --- Core functions ---
 function onImageLoaded(ev) {
@@ -488,6 +504,7 @@ function updateList() {
       });
     });
 
+    fontSel.tabIndex = 0;
     // keep the dropdown focused so arrow keys stay inside it
     fontSel.addEventListener('keydown', e => {
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -505,7 +522,6 @@ function updateList() {
       });
 
     // when this row is rebuilt, put focus into its font‐picker
-    fontSel.tabIndex = 0;
     fontSel.focus();
           
     ctr.appendChild(fontSel);
@@ -894,19 +910,3 @@ function generateText() {
     inactive: buildSVG
   });
 }
-
-const url2        = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
-fetch(url2)
-.then(res => res.json())
-    .then(data => {
-      data.items.forEach(font => {
-        const opt = document.createElement('option');
-        opt.value = font.family;
-        opt.textContent = font.family;
-        fontSelect.appendChild(opt);
-      });
-      // now that fontSelect is fully populated, rebuild every row:
-      updateList();
-    })
-    .catch(err => console.error('Couldn’t load Google Fonts list:', err));  
-});
