@@ -544,12 +544,43 @@ function exportSVG() {
 
   let out = `<svg xmlns="${xmlns}" width="${wPx+2*borderPx}" height="${hPx+2*borderPx}" viewBox="0 0 ${wPx+2*borderPx} ${hPx+2*borderPx}">`
           + `<rect x="${borderPx/2}" y="${borderPx/2}" width="${wPx+borderPx}" height="${hPx+borderPx}" fill="none" stroke="black" stroke-width="${borderPx}"/>`;
+  out += `
+    <text x="${borderPx+4}"
+          y="${hPx+2*borderPx-4}"
+          font-family="Arial, sans-serif"
+          font-size="16"
+          fill="#000"
+          text-anchor="start">
+      L: ${L}&quot;
+    </text>
+    <text x="${wPx+borderPx-4}"
+          y="${hPx+2*borderPx-4}"
+          font-family="Arial, sans-serif"
+          font-size="16"
+          fill="#000"
+          text-anchor="end">
+      W: ${W}&quot;
+    </text>`;
 
   for (const it of images) {
     // final display size
     const dW = it.origW * it.fitScale * it.scalePercent;
     const dH = it.origH * it.fitScale * it.scalePercent;
 
+     out += `<svg x="${it.x}"
+     y="${it.y}"
+     width="${dW}"
+     height="${dH}"
+     viewBox="0 0 ${it.origW} ${it.origH}"
+     xmlns="${xmlns}">
+     ${new DOMParser()
+    .parseFromString(it.svgText,'image/svg+xml')
+    .documentElement.innerHTML}
+    </svg>`;
+    }
+
+    out += `</svg>`;
+      
     // center about which we rotate
     const cx  = it.x + dW/2;
     const cy  = it.y + dH/2;
