@@ -960,3 +960,4 @@ function generateText() {
     inactive: buildSVG
   });
 }
+});
