@@ -47,57 +47,86 @@ fileInput.addEventListener('change', handleFileLoad);
 
 function onSvgListActionClick(e) {
   const action = e.target.dataset.action;
-  if (!action || action === 'change-font' || action === 'change-size') return;   
-  const li     = e.target.closest('li');
+  if (!action || action === 'change-font' || action === 'change-size') return;
+
+  const li = e.target.closest('li');
   if (!li) return;
-  const it     = images.find(img => img.id === li.dataset.id);
   const id = li.dataset.id;
-  
+  const it = images.find(img => img.id === id);
+  if (!it) return;
+
   switch (action) {
-     case 'align-left':
-      // snap to left border
+    case 'align-left':
       it.x = borderPx;
       break;
-    case 'align-center':
+
+    case 'align-center': {
       const dW = it.origW * it.fitScale * it.scalePercent;
-      // center in the full canvas:
       it.x = (canvas.width - dW) / 2;
       break;
-    case 'align-right':
-      // snap to right border
-      {
-       const dW = it.origW * it.fitScale * it.scalePercent;
-        it.x = canvas.width - borderPx - dW;
-      }
+    }
+
+    case 'align-right': {
+      const dW = it.origW * it.fitScale * it.scalePercent;
+      it.x = canvas.width - borderPx - dW;
       break;
+    }
+
     case 'rotate-left':
       it.rotation -= ROTATION_STEP;
       break;
+
     case 'rotate-right':
       it.rotation += ROTATION_STEP;
       break;
+
     case 'duplicate':
-      const copy = { ...it, id: Date.now() + '_' + Math.random() };
+      // make a true shallow clone with a fresh id
+      const copy = {
+        id:           Date.now() + '_' + Math.random(),
+        filename:     it.filename,
+        image:        it.image,
+        svgText:      it.svgText,
+        origW:        it.origW,
+        origH:        it.origH,
+        fitScale:     it.fitScale,
+        scalePercent: it.scalePercent,
+        rotation:     it.rotation,
+        x:            it.x,
+        y:            it.y,
+        // add any other custom properties here:
+        // fontFamily: it.fontFamily,
+        // fontSize:   it.fontSize,
+      };
       images.push(copy);
       break;
+
     case 'delete':
       images = images.filter(img => img.id !== id);
-      if (selectedId === id) selectedId = images[0]?.id || null;
+      if (selectedId === id) {
+        selectedId = images[0]?.id || null;
+      }
       break;
-     case 'scale':
-      // set scalePercent to slider%
+
+    case 'scale': {
       const pct = +e.target.value / 100;
       const img = images.find(i => i.id === selectedId);
       if (!img) return;
-        const minS = getMinScalePercent(img);
+      const minS = getMinScalePercent(img);
       img.scalePercent = clamp(pct, minS, MAX_SCALE);
       pushHistory();
       redrawCanvas();
-      return;  // don’t fall through to switch
+      return;  // skip the final selectImage call
+    }
+
+    default:
+      return;
   }
+
   pushHistory();
   selectImage(selectedId || images[0]?.id);
 }
+
   
 //svgList.addEventListener('click', onSvgListActionClick);
 //svgList.addEventListener('input', onSvgListActionClick);
@@ -376,9 +405,33 @@ function onWidthChange() {
 }
 
 function pushHistory() {
-  history.push(images.map(item => ({ ...item })));
-  if (history.length > 50) history.shift();
+  // Deep-clone the images array so later changes don’t overwrite our snapshot
+  const snapshot = images.map(img => ({
+    id:           img.id,
+    filename:     img.filename,
+    image:        img.image,
+    svgText:      img.svgText,
+    origW:        img.origW,
+    origH:        img.origH,
+    fitScale:     img.fitScale,
+    scalePercent: img.scalePercent,
+    rotation:     img.rotation,
+    x:            img.x,
+    y:            img.y,
+    // If you’re using text properties, include them too:
+    ...(img.fontFamily !== undefined && { fontFamily: img.fontFamily }),
+    ...(img.fontSize   !== undefined && { fontSize:   img.fontSize   })
+  }));
+
+  history.push(snapshot);
+
+  // Optionally, cap history length to avoid unbounded growth:
+  // if (history.length > 50) history.shift();
+
+  // Enable or disable the undo button based on available history
+  undoBtn.disabled = history.length === 0;
 }
+
 
 function redrawCanvas() {
   const L = +lengthSelect.value, W = +widthSelect.value;
