@@ -459,137 +459,124 @@ function redrawCanvas() {
 }
 
 function updateList() {
+  // 1) clear out any existing list items
   svgList.innerHTML = '';
-  const families = Array.from(fontSelect.options).map(o => o.value);
-  
-  for (const it of images) {
+
+  // 2) collect all font families
+  const families = [];
+  for (let i = 0; i < fontSelect.options.length; i++) {
+    families.push(fontSelect.options[i].value);
+  }
+
+  // 3) build a <li> for each image
+  for (let idx = 0; idx < images.length; idx++) {
+    const it = images[idx];
+
+    // list item container
     const li = document.createElement('li');
     li.dataset.id = it.id;
-    if (it.id===selectedId) li.classList.add('selected');
+    if (it.id === selectedId) {
+      li.classList.add('selected');
+    }
+
+    // filename label
     const name = document.createElement('span');
     name.className = 'filename';
     name.textContent = it.filename;
 
-    // --- controls container ---
+    // controls container
     const ctr = document.createElement('div');
     ctr.className = 'item-controls';
 
-  // rotate button
-    const rotateLeftBtn = document.createElement('button');
-    rotateLeftBtn.textContent   = '⟲';
-    rotateLeftBtn.title         = 'Rotate Left 15°';
-    rotateLeftBtn.dataset.action = 'rotate-left';
-    
-    const rotateRightBtn = document.createElement('button');
-    rotateRightBtn.textContent   = '⟳';
-    rotateRightBtn.title         = 'Rotate Right 15°';
-    rotateRightBtn.dataset.action = 'rotate-right';
+    // align buttons
+    const alignLeft = document.createElement('button');
+    alignLeft.textContent    = '←';
+    alignLeft.title          = 'Align Left';
+    alignLeft.dataset.action = 'align-left';
+
+    const alignCenter = document.createElement('button');
+    alignCenter.textContent    = '↔';
+    alignCenter.title          = 'Align Center';
+    alignCenter.dataset.action = 'align-center';
+
+    const alignRight = document.createElement('button');
+    alignRight.textContent    = '→';
+    alignRight.title          = 'Align Right';
+    alignRight.dataset.action = 'align-right';
+
+    ctr.append(alignLeft, alignCenter, alignRight);
+
+    // rotation buttons
+    const rotateLeft = document.createElement('button');
+    rotateLeft.textContent    = '⟲';
+    rotateLeft.title          = 'Rotate Left 15°';
+    rotateLeft.dataset.action = 'rotate-left';
+
+    const rotateRight = document.createElement('button');
+    rotateRight.textContent    = '⟳';
+    rotateRight.title          = 'Rotate Right 15°';
+    rotateRight.dataset.action = 'rotate-right';
 
     // scale slider
-    const scaleInput = document.createElement('input');
-    scaleInput.type = 'range';
-    scaleInput.min = '50';
-    scaleInput.max = '200';
-    scaleInput.value = (it.scalePercent * 100).toFixed(0);
-    scaleInput.title = 'Scale %';
-    scaleInput.dataset.action = 'scale';
+    const scaleIn = document.createElement('input');
+    scaleIn.type           = 'range';
+    scaleIn.min            = '50';
+    scaleIn.max            = '200';
+    scaleIn.value          = (it.scalePercent * 100).toFixed(0);
+    scaleIn.title          = 'Scale %';
+    scaleIn.dataset.action = 'scale';
 
-    // duplicate button
-    const dupBtn = document.createElement('button');
-    dupBtn.textContent = '⎘';
-    dupBtn.title = 'Duplicate';
-    dupBtn.dataset.action = 'duplicate';
+    // duplicate & delete
+    const dup = document.createElement('button');
+    dup.textContent    = '⎘';
+    dup.title          = 'Duplicate';
+    dup.dataset.action = 'duplicate';
 
-    // delete button
-    const delBtn = document.createElement('button');
-    delBtn.textContent = '✕';
-    delBtn.title = 'Delete';
-    delBtn.dataset.action = 'delete';
+    const del = document.createElement('button');
+    del.textContent    = '✕';
+    del.title          = 'Delete';
+    del.dataset.action = 'delete';
 
-    const alignLeftBtn = document.createElement('button');
-    alignLeftBtn.textContent   = '←';
-    alignLeftBtn.title         = 'Align Left';
-    alignLeftBtn.dataset.action= 'align-left';
-    
-    const alignCenterBtn = document.createElement('button');
-    alignCenterBtn.textContent   = '↔';
-    alignCenterBtn.title         = 'Align Center';
-    alignCenterBtn.dataset.action= 'align-center';
-    
-    const alignRightBtn = document.createElement('button');
-    alignRightBtn.textContent   = '→';
-    alignRightBtn.title         = 'Align Right';
-    alignRightBtn.dataset.action= 'align-right';
-    
-    ctr.append(alignLeftBtn, alignCenterBtn, alignRightBtn);
+    ctr.append(rotateLeft, rotateRight, scaleIn, dup, del);
 
-    ctr.append(rotateLeftBtn, rotateRightBtn, scaleInput, dupBtn, delBtn);
+    // assemble and append
     li.append(name, ctr);
     svgList.append(li);
 
-    if (it.svgText && it.svgText.includes('<text')) {
-    // FONT SELECT
+    // --- if it's a text SVG, add font & size controls ---
+    if (it.svgText.indexOf('<text') !== -1) {
+      // font dropdown
       const fontSel = document.createElement('select');
       fontSel.dataset.action = 'change-font';
-      // list your fonts here (or populate dynamically)
-      for (const family of families) {
-        const o = document.createElement('option');
-        o.value = family;
-        o.textContent = family;
-        if (it.fontFamily === family) o.selected = true;
-        fontSel.appendChild(o);
+
+      for (let j = 0; j < families.length; j++) {
+        const opt = document.createElement('option');
+        opt.value        = families[j];
+        opt.textContent  = families[j];
+        if (it.fontFamily === families[j]) {
+          opt.selected = true;
         }
-      fontSel.addEventListener('change', ev => {
-        it.fontFamily = ev.target.value;
-        pushHistory();
-        WebFont.load({
-          google: { families: [ it.fontFamily ] },
-          active:   () => regenerateTextSVG(it),
-          inactive: () => regenerateTextSVG(it)
-      });
-    });
+        fontSel.appendChild(opt);
+      }
 
-    fontSel.tabIndex = 0;
-    // keep the dropdown focused so arrow keys stay inside it
-    fontSel.addEventListener('keydown', e => {
-        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          e.preventDefault();
-          const opts = Array.from(fontSel.options);
-          const idx  = opts.findIndex(o => o.value === fontSel.value);
-          const newIdx = e.key === 'ArrowDown'
-                       ? Math.min(idx + 1, opts.length - 1)
-                       : Math.max(idx - 1, 0);
-          if (newIdx !== idx) {
-            fontSel.selectedIndex = newIdx;
-            fontSel.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        }
-      });
+      // hook up named handlers (defined elsewhere)
+      fontSel.addEventListener('change', handleFontChange);
+      fontSel.addEventListener('keydown', handleFontKeydown);
 
-    // when this row is rebuilt, put focus into its font‐picker
-    fontSel.focus();
-          
-    ctr.appendChild(fontSel);
+      ctr.appendChild(fontSel);
 
-    // SIZE INPUT
-    const sizeIn = document.createElement('input');
-    sizeIn.type           = 'number';
-    sizeIn.min            = 8;
-    sizeIn.max            = 200;
-    sizeIn.value          = it.fontSize || 48;
-    sizeIn.style.width    = '4rem';
-    sizeIn.addEventListener('change', ev => {
-      it.fontSize = parseInt(ev.target.value,10) || it.fontSize;
-      pushHistory();
-      WebFont.load({
-        google: { families: [ it.fontFamily ] },
-        active:   () => regenerateTextSVG(it),
-        inactive: () => regenerateTextSVG(it)
-      });
-    });
-    ctr.appendChild(sizeIn);
+      // size input
+      const sizeIn = document.createElement('input');
+      sizeIn.type     = 'number';
+      sizeIn.min      = 8;
+      sizeIn.max      = 200;
+      sizeIn.value    = it.fontSize || 48;
+      sizeIn.style.width = '4rem';
+      sizeIn.addEventListener('change', handleFontSizeChange);
+
+      ctr.appendChild(sizeIn);
+    }
   }
- }
 }
 
 function rotateSelected(by = ROTATION_STEP) {
