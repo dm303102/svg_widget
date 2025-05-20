@@ -886,68 +886,84 @@ function generateText() {
   const text = prompt('Enter text to turn into SVG:');
   if (!text) return;
 
-  // 1) read controls
-  const font     = fontSelect.value;
-  const fontSize = parseInt(document.getElementById('fontSizeInput').value, 10) || 48;
+  const fontInput     = fontSelect.value;
+  const fontSizeInput = document.getElementById('fontSizeInput');
+  const fontSize      = parseInt(fontSizeInput.value, 10) || 48;
 
+  // This does all the SVG‐building, blob creation, and image‐load hookup:
   function buildSVG() {
-    // measure true bounds…
-    const ctx = document.createElement('canvas').getContext('2d');
-    ctx.font = `${fontSize}px ${font}`;
-    const m       = ctx.measureText(text);
-    const left    = m.actualBoundingBoxLeft,
-          right   = m.actualBoundingBoxRight,
-          ascent  = m.actualBoundingBoxAscent,
-          descent = m.actualBoundingBoxDescent;
-    const w = Math.ceil(left + right),
-          h = Math.ceil(ascent + descent);
+    // measure text
+    const measureCtx = document.createElement('canvas').getContext('2d');
+    measureCtx.font = fontSize + 'px ' + fontInput;
+    const metrics = measureCtx.measureText(text);
+    const left    = metrics.actualBoundingBoxLeft;
+    const right   = metrics.actualBoundingBoxRight;
+    const ascent  = metrics.actualBoundingBoxAscent;
+    const descent = metrics.actualBoundingBoxDescent;
+    const w = Math.ceil(left + right);
+    const h = Math.ceil(ascent + descent);
 
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" ' +
-                `width="${w}" height="${h}" ` +
-                `viewBox="${-left} 0 ${w} ${h}">` +
-                '<style>text{' +
-                  `font-family:"${font}";` +
-                  `font-size:${fontSize}px;` +
-                  'fill:#000;' +
-                '}</style>' +
-                `<text x="0" y="${ascent}">${text}</text>` +
-              '</svg>';
+    // assemble SVG string
+    const svgString =
+      '<svg xmlns="http://www.w3.org/2000/svg" ' +
+        'width="'  + w + '" ' +
+        'height="' + h + '" ' +
+        'viewBox="' + (-left) + ' 0 ' + w + ' ' + h + '">' +
+        '<style>text{' +
+          'font-family:"' + fontInput + '";' +
+          'font-size:'   + fontSize   + 'px;' +
+          'fill:#000;' +
+        '}</style>' +
+        '<text x="0" y="' + ascent + '">' +
+          text +
+        '</text>' +
+      '</svg>';
 
-    const blobOptions = { type: 'image/svg+xml' };
-    const blob        = new Blob([ svg ], blobOptions);
-    const url  = URL.createObjectURL(blob);
-    const img  = new Image();
-    img.onload = () => {
+    // blob + URL
+    const blobOpts = { type: 'image/svg+xml' };
+    const blob     = new Blob([ svgString ], blobOpts);
+    const url      = URL.createObjectURL(blob);
+
+    // image loader
+    const img = new Image();
+    img.addEventListener('load', handleSvgImageLoad);
+    img.src = url;
+
+    // named load handler
+    function handleSvgImageLoad(ev) {
+      const loadedImg = ev.target;
       images.push({
         id:           Date.now().toString(36),
-        filename:     `${text.replace(/\s+/g,'_')}_${font}_${fontSize}px.svg`,
-        svgText:      svg,
+        filename:     text.replace(/\s+/g,'_') + '_' + fontInput + '_' + fontSize + 'px.svg',
+        svgText:      svgString,
         origW:        w,
         origH:        h,
         fitScale:     1,
         scalePercent: 1,
         rotation:     0,
-        fontFamily:   font,
+        fontFamily:   fontInput,
         fontSize:     fontSize,
         x:            borderPx + (canvas.width/2 - w/2),
         y:            borderPx + (canvas.height/2 - h/2),
-        image:        img
+        image:        loadedImg
       });
       updateList();
       redrawCanvas();
       URL.revokeObjectURL(url);
-    };
-    img.src = url;
+    }
   }
 
-  // 2) Always call buildSVG after attempting to load the font
-  WebFont.load({
-    google:  { families: [ font ] },
-    active:   buildSVG,
-    inactive: buildSVG
-  });
+  // pull out the WebFont config so we don’t inline an object into the call
+  const wfConfig = {
+    google:   { families: [ fontInput ] },
+    active:    buildSVG,
+    inactive:  buildSVG
+  };
+
+  WebFont.load(wfConfig);
 }
 textBtn.addEventListener('click', generateText);
+
     
 }
 });    // end document.addEventListener('DOMContentLoaded', …)
