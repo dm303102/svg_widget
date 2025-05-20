@@ -175,11 +175,6 @@ function onCropBtnClick() {
   cropBtn.addEventListener('click', onCropBtnClick);
   // canvas mouse handlers (make sure these run _after_ that toggle above)
   // canvas dragging & cropping
-  canvas.addEventListener('mousedown', onMouseDown);
-  canvas.addEventListener('mousemove', onMouseMove);
-  ['mouseup','mouseleave'].forEach(evt =>
-    canvas.addEventListener(evt, onMouseUp)
-  );      
 
 // --- configuration & DOM refs ---
 const variants = [
@@ -751,7 +746,7 @@ function onMouseDown(e) {
     }
   }
    redrawCanvas();
-}
+}    
       
 function onMouseMove(e) {
   const { x, y } = getMousePos(e);
@@ -780,7 +775,12 @@ function onMouseUp() {
     cropStart = null;
   }
 }
-      
+canvas.addEventListener('mousedown', onMouseDown);
+canvas.addEventListener('mousemove', onMouseMove);
+['mouseup','mouseleave'].forEach(evt =>
+   canvas.addEventListener(evt, onMouseUp)
+);
+    
 function drawCropOverlay() {
   const { startX, startY, curX, curY } = cropStart;
   const x0 = Math.min(startX,curX), y0 = Math.min(startY,curY);
