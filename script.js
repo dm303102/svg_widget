@@ -968,4 +968,4 @@ function generateText() {
   WebFont.load(wfConfig);
 }
 textBtn.addEventListener('click', generateText);
-});    // end document.addEventListener('DOMContentLoaded', …)
+}); 
