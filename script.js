@@ -63,7 +63,6 @@ undoBtn.addEventListener('click', onUndoBtnClick);
                          
 lengthSelect.addEventListener('change', onLengthChange);
 widthSelect.addEventListener('change', onWidthChange);
-fileInput.addEventListener('change', handleFileLoad);
 
 function onSvgListActionClick(e) {
   const action = e.target.dataset.action;
@@ -856,6 +855,7 @@ function handleFileLoad(e) {
     redrawCanvas();
   }
 }
+fileInput.addEventListener('change', handleFileLoad);
 
 function readSvgFile(file, wPx, hPx) {
   const reader = new FileReader();
