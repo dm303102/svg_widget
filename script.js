@@ -16,7 +16,7 @@ const svgList           = document.getElementById('svgList');
 const fileInput         = document.getElementById('fileInput');
 const fontSelect = document.getElementById('fontSelect');
 const canvas            = document.getElementById('mainCanvas');
-const ctx               = canvas.getContext('2d');\
+const ctx               = canvas.getContext('2d');
 
 const images = [], selectedId = null, history = [];
 const dragging = false, cropping = false;
