@@ -314,7 +314,8 @@ function regenerateTextSVG(img) {
     '</svg>';
   
   // reload image
-  const blob = new Blob([newSvg], { type: 'image/svg+xml' });
+  const blobOptions = { type: 'image/svg+xml' };
+  const blob        = new Blob([ newSvg ], blobOptions);
   const url  = URL.createObjectURL(blob);
   const newImg = new Image();
   newImg.onload = () => {
@@ -912,7 +913,8 @@ function generateText() {
                 `<text x="0" y="${ascent}">${text}</text>` +
               '</svg>';
 
-    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const blobOptions = { type: 'image/svg+xml' };
+    const blob        = new Blob([ svg ], blobOptions);
     const url  = URL.createObjectURL(blob);
     const img  = new Image();
     img.onload = () => {
