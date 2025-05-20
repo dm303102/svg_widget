@@ -159,7 +159,7 @@ function onCropBtnClick() {
   canvas.addEventListener('mousedown', onMouseDown);
   canvas.addEventListener('mousemove', onMouseMove);
   ['mouseup','mouseleave'].forEach(evt =>
-    canvas.addEventListener(evt, onMouseUp)
+    canvas.addEventListener(evt, onMouseUp);
   );      
 });
 
