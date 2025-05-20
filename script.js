@@ -959,5 +959,5 @@ function generateText() {
     inactive: buildSVG
   });
 }
-
+}
 });    // end document.addEventListener('DOMContentLoaded', …)
