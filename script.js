@@ -41,8 +41,6 @@ fetch(url2)
     .catch(err => console.error('Couldn’t load Google Fonts list:', err));
 
 //Listener Functions
-textBtn.addEventListener('click', generateText);
-
 function onCanvasClick(e) {
   const { x, y } = getMousePos(e);
   // search from topmost to bottom
@@ -960,5 +958,7 @@ function generateText() {
     inactive: buildSVG
   });
 }
+textBtn.addEventListener('click', generateText);
+    
 }
 });    // end document.addEventListener('DOMContentLoaded', …)
