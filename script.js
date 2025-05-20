@@ -3,9 +3,30 @@ const MIN_CUT_INCHES = 0.001;     // your minimum cuttable feature
 const MAX_SCALE = 40;             // allow up to 1000% zoom
 
 document.addEventListener('DOMContentLoaded', () => {
-  const apiKey     = 'AIzaSyAK4c5PbgmIulpkgiGH0QCmwosi0W8oNKQ'; 
-  const url2 = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
-  fetch(url2)
+const ROTATION_STEP = Math.PI / 12; // 15°
+const borderPx = 4;
+const lengthSelect      = document.getElementById('lengthSelect');
+const widthSelect       = document.getElementById('widthSelect');
+const priceDisplay      = document.getElementById('priceDisplay');
+const fileInputContainer= document.getElementById('fileInputContainer');
+const undoBtn           = document.getElementById('undoBtn');
+const exportBtn         = document.getElementById('exportBtn');
+const textBtn    = document.getElementById('textBtn');
+const svgList           = document.getElementById('svgList');
+const fileInput         = document.getElementById('fileInput');
+const fontSelect = document.getElementById('fontSelect');
+const canvas            = document.getElementById('mainCanvas');
+const ctx               = canvas.getContext('2d');\
+
+const images = [], selectedId = null, history = [];
+const dragging = false, cropping = false;
+const dragOffset = { x: 0, y: 0 };
+const cropStart  = null;
+
+const apiKey     = 'AIzaSyAK4c5PbgmIulpkgiGH0QCmwosi0W8oNKQ'; 
+const url2 = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
+
+fetch(url2)
     .then(res => res.json())
     .then(data => {
       // sort alphabetically:
@@ -163,8 +184,6 @@ function onCropBtnClick() {
     canvas.addEventListener(evt, onMouseUp)
   );      
 
-const canvas            = document.getElementById('mainCanvas');
-const ctx               = canvas.getContext('2d');
 // --- configuration & DOM refs ---
 const variants = [
       { length: 4, width: 4, price: 12.00 },
@@ -253,24 +272,6 @@ const variants = [
       { length: 36, width: 10, price: 48.00 },
       { length: 36, width: 12, price: 50.00 }
 ];
-
-const ROTATION_STEP = Math.PI / 12; // 15°
-const borderPx = 4;
-const lengthSelect      = document.getElementById('lengthSelect');
-const widthSelect       = document.getElementById('widthSelect');
-const priceDisplay      = document.getElementById('priceDisplay');
-const fileInputContainer= document.getElementById('fileInputContainer');
-const undoBtn           = document.getElementById('undoBtn');
-const exportBtn         = document.getElementById('exportBtn');
-const textBtn    = document.getElementById('textBtn');
-const svgList           = document.getElementById('svgList');
-const fileInput         = document.getElementById('fileInput');
-const fontSelect = document.getElementById('fontSelect');
-  
-let images = [], selectedId = null, history = [];
-let dragging = false, cropping = false;
-let dragOffset = { x: 0, y: 0 };
-let cropStart  = null;
 
 // --- initial setup ---
 initLength();
