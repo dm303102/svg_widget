@@ -3,6 +3,7 @@ const MIN_CUT_INCHES = 0.001;     // your minimum cuttable feature
 const MAX_SCALE = 40;             // allow up to 1000% zoom
 
 document.addEventListener('DOMContentLoaded', () => {
+  const apiKey     = 'AIzaSyAK4c5PbgmIulpkgiGH0QCmwosi0W8oNKQ'; 
   const url2 = `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}`;
   fetch(url2)
     .then(res => res.json())
@@ -265,7 +266,6 @@ const textBtn    = document.getElementById('textBtn');
 const svgList           = document.getElementById('svgList');
 const fileInput         = document.getElementById('fileInput');
 const fontSelect = document.getElementById('fontSelect');
-const apiKey     = 'AIzaSyAK4c5PbgmIulpkgiGH0QCmwosi0W8oNKQ'; 
   
 let images = [], selectedId = null, history = [];
 let dragging = false, cropping = false;
