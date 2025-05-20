@@ -929,10 +929,11 @@ function generateText() {
     img.addEventListener('load', handleSvgImageLoad);
     img.src = url;
 
-    // named load handler
-    function handleSvgImageLoad(ev) {
+   function handleSvgImageLoad(ev) {
       const loadedImg = ev.target;
-      images.push({
+    
+      // build the new image record in its own variable
+      const newImage = {
         id:           Date.now().toString(36),
         filename:     text.replace(/\s+/g,'_') + '_' + fontInput + '_' + fontSize + 'px.svg',
         svgText:      svgString,
@@ -946,7 +947,11 @@ function generateText() {
         x:            borderPx + (canvas.width/2 - w/2),
         y:            borderPx + (canvas.height/2 - h/2),
         image:        loadedImg
-      });
+      };
+    
+      // now push it
+      images.push(newImage);
+    
       updateList();
       redrawCanvas();
       URL.revokeObjectURL(url);
