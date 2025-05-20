@@ -161,7 +161,6 @@ function onCropBtnClick() {
   ['mouseup','mouseleave'].forEach(evt =>
     canvas.addEventListener(evt, onMouseUp)
   );      
-});
 
 const canvas            = document.getElementById('mainCanvas');
 const ctx               = canvas.getContext('2d');
