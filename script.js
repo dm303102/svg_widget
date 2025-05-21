@@ -966,6 +966,5 @@ function generateText() {
   };
 
   WebFont.load(wfConfig);
-}
 textBtn.addEventListener('click', generateText);
 }); 
